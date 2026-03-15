@@ -27,6 +27,6 @@ Then open localhost:8080 in your browser.
 - Curriculum Gap Score — how relevant your college subjects are
 
 ## Team
-- [Your Name] — Backend development
-- [Teammate 2] — Frontend layout
-- [Teammate 3] — Chart integration
+- Ayan Bhoumick — Backend development
+- Dhruv Jain — Frontend layout
+- Porush Tyagi — Chart integration
