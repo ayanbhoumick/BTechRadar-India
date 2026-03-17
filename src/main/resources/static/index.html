@@ -13,10 +13,27 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f0f0;
-            color: #1a1a1a;
+            color: #f0f0f0;
             line-height: 1.2;
+            transition: background 0.5s ease, color 0.5s ease;
+            background-color: #050000;
+            background-image:
+                radial-gradient(circle at 10% 80%, #900000 0%, transparent 40%),
+                radial-gradient(circle at 90% 20%, #700000 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, #200000 0%, #000000 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
         }
+
+        html.dark body {
+            background-color: #000000;
+            background-image:
+                radial-gradient(circle at 10% 80%, #400000 0%, transparent 40%),
+                radial-gradient(circle at 90% 20%, #300000 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, #100000 0%, #000000 100%);
+        }
+
+        /* Animation removed as static gradient looks more premium here */
 
         .grid-container {
             display: grid;
@@ -24,16 +41,121 @@
             gap: 20px;
         }
 
-        .swiss-border {
-            border-top: 8px solid #1a1a1a;
-        }
-
         .accent-orange {
-            color: #ff4d00;
+            color: #ff3333;
+            /* Shifted to more red to match aesthetic */
         }
 
-        .bg-accent-orange {
-            background-color: #ff4d00;
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(40, 10, 10, 0.4);
+            /* Deep dark reddish tint */
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        html.dark .glass-panel {
+            background: rgba(20, 5, 5, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: inherit;
+            transition: all 0.3s ease;
+            padding: 12px 16px;
+        }
+
+        html.dark .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: #ff4d00;
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 4px rgba(255, 77, 0, 0.1);
+        }
+
+        html.dark .glass-input:focus {
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 4px rgba(255, 77, 0, 0.2);
+        }
+
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        html.dark .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            color: inherit;
+        }
+
+        html.dark .btn-action {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        html.dark .btn-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .skill-tag {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 4px 12px;
+            backdrop-filter: blur(4px);
+        }
+
+        html.dark .skill-tag {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .skill-tag.missing {
+            background: rgba(255, 77, 0, 0.2);
+            border-color: rgba(255, 77, 0, 0.4);
+            color: #ffba9f;
+        }
+
+        html.dark .skill-tag.missing {
+            background: rgba(255, 77, 0, 0.3);
+            border-color: rgba(255, 77, 0, 0.5);
+            color: #ff8a5c;
         }
 
         ::-webkit-scrollbar {
@@ -41,30 +163,16 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #f0f0f0;
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #1a1a1a;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
         }
 
-        .btn-action {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-action:hover {
-            background-color: #ff4d00;
-            color: white;
-            border-color: #ff4d00;
-        }
-
-        .skill-tag {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 700;
+        html.dark ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         @keyframes slideUp {
@@ -80,62 +188,206 @@
         }
 
         .animate-results {
-            animation: slideUp 0.4s forwards;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Aurora Glow Effect */
+        .aurora-chart-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .aurora-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            height: 85%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #00ffff, #b300ff, #ff00c8, #b300ff, #00ffff);
+            filter: blur(40px);
+            opacity: 0.55;
+            z-index: 1;
+            animation: spinAurora 15s linear infinite;
+        }
+
+        .aurora-nebula {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 45%;
+            height: 45%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(160, 32, 240, 0.6) 0%, rgba(0, 255, 255, 0.2) 50%, rgba(255, 0, 200, 0) 80%);
+            filter: blur(25px);
+            z-index: 2;
+            animation: pulseNebula 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes spinAurora {
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        @keyframes pulseNebula {
+            0% {
+                transform: translate(-50%, -50%) scale(0.85);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1.15);
+                opacity: 0.9;
+            }
+        }
+
+        /* Animated Theme Toggle */
+        .theme-toggle-mask {
+            transition: transform 0.35s ease-in-out;
+            transform-origin: 16px 16px;
+        }
+        .dark .theme-toggle-mask {
+            transform: translate(-12px, 10px);
+        }
+        .theme-toggle-circle {
+            transition: transform 0.35s ease-in-out;
+            transform-origin: 16px 16px;
+        }
+        .dark .theme-toggle-circle {
+            transform: scale(1.25);
+        }
+        .theme-toggle-rays {
+            transition: transform 0.35s ease-in-out, opacity 0.35s ease-in-out;
+            transform-origin: 16px 16px;
+        }
+        .dark .theme-toggle-rays {
+            transform: rotate(-100deg) scale(0.5);
+            opacity: 0;
+        }
+
+        /* Glowing Effect */
+        .glowing-effect-wrapper {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            opacity: 1;
+            transition: opacity 0.3s;
+            z-index: 0;
+        }
+
+        .glowing-effect-glow {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+        }
+
+        .glowing-effect-glow::after {
+            content: "";
+            position: absolute;
+            border-radius: inherit;
+            inset: calc(-1 * var(--glowingeffect-border-width));
+            border: var(--glowingeffect-border-width) solid transparent;
+            background: var(--gradient);
+            background-attachment: fixed;
+            opacity: var(--active);
+            transition: opacity 0.3s;
+            -webkit-mask-clip: padding-box, border-box;
+            mask-clip: padding-box, border-box;
+            -webkit-mask-composite: source-in;
+            mask-composite: intersect;
+            -webkit-mask-image: linear-gradient(#0000, #0000), conic-gradient(from calc((var(--start) - var(--spread)) * 1deg), #00000000 0deg, #fff, #00000000 calc(var(--spread) * 2deg));
+            mask-image: linear-gradient(#0000, #0000), conic-gradient(from calc((var(--start) - var(--spread)) * 1deg), #00000000 0deg, #fff, #00000000 calc(var(--spread) * 2deg));
         }
     </style>
 </head>
 
-<body class="p-6 md:p-16">
+<body class="p-4 md:p-12">
+
 
     <div class="max-w-7xl mx-auto">
-        <header class="grid-container mb-20">
+        <header class="grid-container mb-12">
             <div class="col-span-12 md:col-span-8">
-                <h1 class="text-7xl md:text-9xl font-black uppercase tracking-tighter leading-[0.85]">
+                <h1 class="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] drop-shadow-md">
                     Career<br>Compass<br><span class="accent-orange">India.</span>
                 </h1>
             </div>
             <div class="col-span-12 md:col-span-4 flex flex-col justify-end pt-8 md:pt-0">
-                <p class="text-xl font-bold border-l-8 border-black pl-6">
-                    Real-time job market intelligence for the next generation of Indian engineers.
-                </p>
-                <p class="mt-4 text-sm text-gray-500 font-medium">v1.0 / Market Analysis Tool</p>
+                <div class="flex justify-end mb-4">
+                    <button onclick="toggleTheme()" class="btn-action py-2 px-4 font-bold uppercase text-xs flex items-center gap-2" aria-label="Toggle Theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" stroke-linecap="round" viewBox="0 0 32 32" class="w-5 h-5 theme-toggle-svg">
+                            <clipPath id="theme-toggle-mask">
+                                <path class="theme-toggle-mask" d="M0-5h30a1 1 0 0 0 9 13v24H0Z" />
+                            </clipPath>
+                            <g clip-path="url(#theme-toggle-mask)">
+                                <circle class="theme-toggle-circle" cx="16" cy="16" r="8" />
+                                <g class="theme-toggle-rays" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M16 5.5v-4" />
+                                    <path d="M16 30.5v-4" />
+                                    <path d="M1.5 16h4" />
+                                    <path d="M26.5 16h4" />
+                                    <path d="m23.4 8.6 2.8-2.8" />
+                                    <path d="m5.7 26.3 2.9-2.9" />
+                                    <path d="m5.8 5.8 2.8 2.8" />
+                                    <path d="m23.4 23.4 2.9 2.9" />
+                                </g>
+                            </g>
+                        </svg>
+                        Theme
+                    </button>
+                </div>
+                <div class="glass-panel p-6">
+                    <p class="text-lg font-bold">
+                        Real-time job market intelligence for the next generation of Indian engineers.
+                    </p>
+                    <p class="mt-2 text-sm opacity-70 font-medium">v1.0 / Market Analysis Tool</p>
+                </div>
             </div>
         </header>
 
         <main class="grid-container">
-            <aside class="col-span-12 lg:col-span-4 space-y-12">
-                <div class="swiss-border pt-4">
-                    <h2 class="text-xs font-black uppercase tracking-widest mb-8">01 / Parameters</h2>
+            <aside class="col-span-12 lg:col-span-4 space-y-8">
+                <div class="glass-panel p-6 md:p-8">
+                    <h2 class="text-xs font-black uppercase tracking-widest mb-6 opacity-70">01 / Parameters</h2>
 
                     <div class="space-y-6">
                         <div>
-                            <label class="block text-[10px] font-black uppercase mb-2">Target Role</label>
+                            <label class="block text-[10px] font-black uppercase mb-2 opacity-80">Target Role</label>
                             <input id="role" type="text" placeholder="e.g. Backend Engineer"
-                                class="w-full bg-transparent border-b-2 border-black p-2 focus:outline-none focus:border-[#ff4d00] font-bold text-lg placeholder:text-gray-300">
+                                class="w-full glass-input font-bold text-lg focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black uppercase mb-2">Target City</label>
+                            <label class="block text-[10px] font-black uppercase mb-2 opacity-80">Target City</label>
                             <input id="city" type="text" placeholder="e.g. Bengaluru"
-                                class="w-full bg-transparent border-b-2 border-black p-2 focus:outline-none focus:border-[#ff4d00] font-bold text-lg placeholder:text-gray-300">
+                                class="w-full glass-input font-bold text-lg focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black uppercase mb-2">Current Skills</label>
+                            <label class="block text-[10px] font-black uppercase mb-2 opacity-80">Current Skills</label>
                             <textarea id="userSkills" rows="3" placeholder="Java, Python, Git..."
-                                class="w-full bg-transparent border-b-2 border-black p-2 focus:outline-none focus:border-[#ff4d00] font-bold text-lg placeholder:text-gray-300"></textarea>
+                                class="w-full glass-input font-bold text-lg focus:outline-none"></textarea>
                         </div>
                     </div>
 
-                    <div class="mt-12 flex flex-col gap-4">
+                    <div class="mt-8 flex flex-col gap-4">
                         <button onclick="handleApi('gap')"
-                            class="btn-action w-full border-2 border-black py-4 px-6 text-left font-black uppercase text-sm flex justify-between items-center">
+                            class="btn-action w-full py-4 px-6 text-left font-black uppercase text-sm flex justify-between items-center">
                             Analyze Skill Gap <i data-lucide="arrow-right"></i>
                         </button>
                         <button onclick="handleApi('curriculum')"
-                            class="btn-action w-full border-2 border-black py-4 px-6 text-left font-black uppercase text-sm flex justify-between items-center">
+                            class="btn-action w-full py-4 px-6 text-left font-black uppercase text-sm flex justify-between items-center">
                             Audit Curriculum <i data-lucide="book"></i>
                         </button>
                         <button onclick="handleApi('top')"
-                            class="btn-action w-full border-2 border-black py-4 px-6 text-left font-black uppercase text-sm flex justify-between items-center">
+                            class="btn-action w-full py-4 px-6 text-left font-black uppercase text-sm flex justify-between items-center">
                             Market Demand <i data-lucide="bar-chart-3"></i>
                         </button>
                     </div>
@@ -143,18 +395,23 @@
             </aside>
 
             <section class="col-span-12 lg:col-span-8">
-                <div class="swiss-border pt-4 min-h-[600px] bg-white p-8 md:p-12 shadow-2xl">
-                    <h2 class="text-xs font-black uppercase tracking-widest mb-12">02 / Intelligence Output</h2>
+                <div
+                    class="glass-panel min-h-[600px] p-6 md:p-10 relative overflow-hidden flex flex-col items-center justify-center">
+                    <h2 class="text-xs font-black uppercase tracking-widest absolute top-10 left-10 opacity-70">02 /
+                        Intelligence Output</h2>
 
-                    <div id="loading-state" class="hidden flex flex-col items-center justify-center h-64">
-                        <div class="w-12 h-12 border-4 border-black border-t-[#ff4d00] animate-spin"></div>
-                        <p class="mt-4 font-black uppercase text-xs tracking-tighter">Processing Market Data...</p>
+                    <div id="loading-state" class="hidden flex-col items-center justify-center h-full w-full">
+                        <div class="w-12 h-12 border-4 border-transparent border-t-[#ff4d00] rounded-full animate-spin">
+                        </div>
+                        <p class="mt-4 font-black uppercase text-xs tracking-tighter opacity-80">Processing Market
+                            Data...</p>
                     </div>
 
-                    <div id="results-content" class="animate-results">
-                        <div class="flex flex-col items-center justify-center h-96 text-center opacity-20">
-                            <i data-lucide="compass" class="w-20 h-20 mb-4"></i>
-                            <p class="font-black uppercase italic">Awaiting Input Parameters</p>
+                    <div id="results-content" class="w-full h-full pt-12 animate-results">
+                        <div id="placeholder-content"
+                            class="flex flex-col items-center justify-center h-96 text-center opacity-40">
+                            <i data-lucide="compass" class="w-24 h-24 mb-6 animate-pulse"></i>
+                            <p class="font-black uppercase tracking-widest text-sm">Awaiting Input Parameters</p>
                         </div>
                     </div>
                 </div>
@@ -162,33 +419,38 @@
         </main>
 
         <footer
-            class="mt-20 border-t border-gray-300 pt-8 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            class="mt-12 glass-panel py-6 px-8 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest opacity-80">
             <div>© 2026 CareerCompass India</div>
             <div>Built for Indian CS Ecosystem</div>
         </footer>
     </div>
 
     <template id="tpl-gap">
-        <div class="space-y-12">
+        <div class="space-y-10">
             <div class="flex flex-col md:flex-row justify-between items-baseline gap-4">
-                <h3 class="text-5xl font-black uppercase italic tracking-tighter">Gap Analysis</h3>
-                <div class="text-right">
-                    <span id="res-score" class="text-8xl font-black leading-none">0%</span>
-                    <p class="text-[10px] font-black uppercase text-[#ff4d00]">Match Score</p>
+                <h3 class="text-4xl md:text-5xl font-black uppercase italic tracking-tighter drop-shadow-md">Gap
+                    Analysis</h3>
+                <div class="text-right glass-panel px-6 py-4">
+                    <span id="res-score"
+                        class="text-6xl md:text-7xl font-black leading-none bg-clip-text text-transparent bg-gradient-to-r from-[#ff4d00] to-[#ff8a00]">0%</span>
+                    <p class="text-[10px] font-black uppercase tracking-widest mt-2 opacity-80">Match Score</p>
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-12">
-                <div>
-                    <h4 class="text-xs font-black uppercase border-b-2 border-black mb-4">Matched Proficiencies</h4>
+            <div class="grid md:grid-cols-2 gap-8 mt-8">
+                <div class="glass-panel p-6">
+                    <h4 class="text-xs font-black uppercase mb-4 opacity-70 flex items-center gap-2"><i
+                            data-lucide="check-circle" class="w-4 h-4 text-green-500"></i> Matched Proficiencies</h4>
                     <div id="res-matched" class="flex flex-wrap gap-2"></div>
 
-                    <h4 class="text-xs font-black uppercase border-b-2 border-black mb-4 mt-12">Missing Critical Skills
-                    </h4>
+                    <h4 class="text-xs font-black uppercase mb-4 mt-8 opacity-70 flex items-center gap-2"><i
+                            data-lucide="x-circle" class="w-4 h-4 text-red-500"></i> Missing Critical Skills</h4>
                     <div id="res-missing" class="flex flex-wrap gap-2"></div>
                 </div>
-                <div class="bg-gray-100 p-6 border-l-4 border-[#ff4d00]">
-                    <h4 class="text-xs font-black uppercase mb-4 tracking-widest">Roadmap Recommendations</h4>
+                <div class="glass-panel p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#ff4d00] to-[#ff8a00]"></div>
+                    <h4 class="text-xs font-black uppercase mb-6 tracking-widest opacity-80">Roadmap Recommendations
+                    </h4>
                     <ul id="res-rec" class="space-y-4 text-sm font-bold"></ul>
                 </div>
             </div>
@@ -196,28 +458,38 @@
     </template>
 
     <template id="tpl-top">
-        <div class="space-y-8">
-            <h3 class="text-5xl font-black uppercase italic tracking-tighter mb-8">Market Demand</h3>
-            <div class="h-[400px]">
-                <canvas id="topChart"></canvas>
+        <div class="space-y-6 flex flex-col w-full h-full">
+            <h3 class="text-4xl md:text-5xl font-black uppercase italic tracking-tighter drop-shadow-md">Market Demand
+            </h3>
+            <div class="glass-panel p-6 flex-grow flex items-center justify-center">
+                <div class="aurora-chart-container">
+                    <div class="aurora-glow"></div>
+                    <div class="aurora-nebula"></div>
+                    <div class="relative w-full h-full" style="z-index: 10;">
+                        <canvas id="topChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </template>
 
     <template id="tpl-curriculum">
-        <div class="space-y-12">
-            <h3 class="text-5xl font-black uppercase italic tracking-tighter">Curriculum Audit</h3>
+        <div class="space-y-10">
+            <h3 class="text-4xl md:text-5xl font-black uppercase italic tracking-tighter drop-shadow-md">Curriculum
+                Audit</h3>
 
-            <div class="relative pt-1">
-                <div class="flex mb-2 items-center justify-between">
-                    <div><span
-                            class="text-xs font-black uppercase inline-block py-1 px-2 rounded-full bg-black text-white">Syllabus
-                            Coverage</span></div>
-                    <div class="text-right"><span id="curr-perc" class="text-2xl font-black italic">0%</span></div>
+            <div class="glass-panel p-6">
+                <div class="flex mb-3 items-center justify-between">
+                    <div><span class="text-xs font-black uppercase tracking-widest opacity-80">Syllabus Coverage</span>
+                    </div>
+                    <div class="text-right"><span id="curr-perc"
+                            class="text-3xl font-black italic bg-clip-text text-transparent bg-gradient-to-r from-[#ff4d00] to-[#ff8a00]">0%</span>
+                    </div>
                 </div>
-                <div class="overflow-hidden h-8 mb-4 text-xs flex bg-gray-200">
+                <div
+                    class="overflow-hidden h-4 mb-2 text-xs flex rounded-full bg-black/10 dark:bg-white/10 shadow-inner">
                     <div id="curr-bar"
-                        class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-accent-orange transition-all duration-1000"
+                        class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-[#ff4d00] to-[#ff8a00] transition-all duration-1000 rounded-full"
                         style="width: 0%"></div>
                 </div>
             </div>
@@ -228,6 +500,28 @@
 
     <script>
         lucide.createIcons();
+
+        let myChart = null;
+
+        // init theme
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+
+            if (myChart) {
+                myChart.options.plugins.legend.labels.color = '#ffffff';
+                myChart.update();
+            }
+        }
 
         const results = document.getElementById('results-content');
         const loader = document.getElementById('loading-state');
@@ -244,12 +538,14 @@
 
             results.classList.add('hidden');
             loader.classList.remove('hidden');
+            loader.classList.add('flex');
 
             try {
                 if (type === 'top') {
                     const response = await fetch(`/api/skills/demand?role=${encodeURIComponent(role)}&city=${encodeURIComponent(city)}&topN=15`);
                     const data = await response.json();
                     loader.classList.add('hidden');
+                    loader.classList.remove('flex');
                     results.classList.remove('hidden');
                     results.innerHTML = '';
                     renderTop(data);
@@ -260,6 +556,7 @@
                     if (skillsList.length === 0) {
                         alert("Please enter your current skills");
                         loader.classList.add('hidden');
+                        loader.classList.remove('flex');
                         results.classList.remove('hidden');
                         return;
                     }
@@ -270,6 +567,7 @@
                     });
                     const data = await response.json();
                     loader.classList.add('hidden');
+                    loader.classList.remove('flex');
                     results.classList.remove('hidden');
                     results.innerHTML = '';
                     renderGap(data);
@@ -284,6 +582,7 @@
                     });
                     const data = await response.json();
                     loader.classList.add('hidden');
+                    loader.classList.remove('flex');
                     results.classList.remove('hidden');
                     results.innerHTML = '';
                     renderCurriculum(data);
@@ -293,8 +592,9 @@
 
             } catch (error) {
                 loader.classList.add('hidden');
+                loader.classList.remove('flex');
                 results.classList.remove('hidden');
-                results.innerHTML = `<div class="text-red-500 font-bold p-4">Error fetching data. Make sure the server is running.</div>`;
+                results.innerHTML = `<div class="text-red-500 font-bold p-4 glass-panel text-center">Error fetching data. Make sure the server is running.</div>`;
                 console.error(error);
             }
         }
@@ -305,12 +605,12 @@
 
             const matchedDiv = tpl.getElementById('res-matched');
             data.matchedSkills.forEach(s => {
-                matchedDiv.innerHTML += `<span class="skill-tag border border-black px-2 py-1">${s}</span>`;
+                matchedDiv.innerHTML += `<span class="skill-tag">${s}</span>`;
             });
 
             const missingDiv = tpl.getElementById('res-missing');
             data.missingSkills.forEach(s => {
-                missingDiv.innerHTML += `<span class="skill-tag bg-black text-white px-2 py-1">${s}</span>`;
+                missingDiv.innerHTML += `<span class="skill-tag missing">${s}</span>`;
             });
 
             const recList = tpl.getElementById('res-rec');
@@ -332,30 +632,102 @@
             results.appendChild(tpl);
 
             const ctx = document.getElementById('topChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
+            const isDark = document.documentElement.classList.contains('dark');
+
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            const totalDemand = data.reduce((acc, curr) => acc + curr.demandCount, 0);
+
+            // Center text plugin
+            const centerTextPlugin = {
+                id: 'centerText',
+                beforeDraw: function (chart) {
+                    if (chart.data.datasets[0].data.length === 0) return;
+
+                    const ctx = chart.ctx;
+                    ctx.restore();
+
+                    // Get exact center of the doughnut, ignoring legend offset
+                    const meta = chart.getDatasetMeta(0);
+                    const centerX = meta.data[0].x;
+                    const centerY = meta.data[0].y;
+
+                    // Main number
+                    ctx.font = "bold 3em Inter";
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = '#ffffff';
+                    const text = totalDemand.toLocaleString();
+                    const textX = Math.round(centerX - (ctx.measureText(text).width / 2));
+                    const textY = centerY - 10;
+                    ctx.fillText(text, textX, textY);
+
+                    // Subtitle
+                    ctx.font = "1.2em Inter";
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    const subText = "Total Postings";
+                    const subTextX = Math.round(centerX - (ctx.measureText(subText).width / 2));
+                    ctx.fillText(subText, subTextX, textY + 40);
+
+                    ctx.save();
+                }
+            };
+
+            const colors = [
+                '#9b51e0', // Purple
+                '#56ccf2', // Light Blue
+                '#009688', // Teal
+                '#ff69b4', // Pink
+                '#ff4d4d', // Red
+                '#fff0f5', // Very light pink/white
+                '#ffd700', // Gold
+                '#ff8c00', // Dark Orange
+                '#32cd32', // Lime Green
+                '#4169e1', // Royal Blue
+                '#8a2be2', // Blue Violet
+                '#ff1493', // Deep Pink
+                '#00ced1', // Dark Turquoise
+                '#adff2f', // Green Yellow
+                '#ffb6c1'  // Light Pink
+            ];
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
                 data: {
                     labels: data.map(d => d.name),
                     datasets: [{
                         label: 'Demand Count',
                         data: data.map(d => d.demandCount),
-                        backgroundColor: data.map((_, i) => `hsl(${20 + (i * 20)}, 90%, 55%)`),
-                        hoverBackgroundColor: '#1a1a1a'
+                        backgroundColor: colors.slice(0, data.length),
+                        borderWidth: 2,
+                        borderColor: '#1c1c1c', // Dark border to match reference
+                        hoverOffset: 10
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            right: 40
+                        }
+                    },
+                    cutout: '75%',
                     plugins: {
                         legend: {
                             position: 'right',
+                            align: 'start',
                             labels: {
-                                font: { weight: 'bold', family: 'Inter' },
-                                color: '#1a1a1a'
+                                font: { weight: 'bold', family: 'Inter', size: 13 },
+                                color: '#ffffff',
+                                boxWidth: 30,
+                                padding: 15
                             }
                         }
                     }
-                }
+                },
+                plugins: [centerTextPlugin]
             });
         }
 
@@ -371,13 +743,116 @@
             const subjectsDiv = document.getElementById('subject-scores');
             Object.entries(data.subjectRelevanceScores).forEach(([sub, score]) => {
                 subjectsDiv.innerHTML += `
-                    <div class="border-2 border-black p-4 flex justify-between items-center">
-                        <span class="text-[10px] font-black uppercase">${sub}</span>
-                        <span class="font-black italic text-lg">${Math.round(score)}</span>
+                    <div class="glass-panel p-4 flex justify-between items-center hover:bg-white/10 transition-colors">
+                        <span class="text-[10px] font-black uppercase opacity-90">${sub}</span>
+                        <span class="font-black italic text-xl">${Math.round(score)}</span>
                     </div>
                 `;
             });
         }
+
+        function initGlowingEffects() {
+            // Apply natively mapped React logic to all major UI panels
+            const panels = document.querySelectorAll('.glass-panel:not(#subject-scores .glass-panel)');
+            
+            panels.forEach(panel => {
+                // Determine container position
+                if (window.getComputedStyle(panel).position === 'static') {
+                    panel.style.position = 'relative';
+                }
+                
+                // Construct the DOM nodes natively
+                const wrapper = document.createElement('div');
+                wrapper.className = 'glowing-effect-wrapper';
+                wrapper.style.setProperty('--blur', '0px');
+                wrapper.style.setProperty('--spread', '40');
+                wrapper.style.setProperty('--start', '0');
+                wrapper.style.setProperty('--active', '0');
+                wrapper.style.setProperty('--glowingeffect-border-width', '2px');
+                wrapper.style.setProperty('--repeating-conic-gradient-times', '5');
+                
+                const gradient = `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%),
+                        radial-gradient(circle at 40% 40%, #d79f1e 5%, #d79f1e00 15%),
+                        radial-gradient(circle at 60% 60%, #5a922c 10%, #5a922c00 20%), 
+                        radial-gradient(circle at 40% 60%, #4c7894 10%, #4c789400 20%),
+                        repeating-conic-gradient(
+                          from 236.84deg at 50% 50%,
+                          #dd7bbb 0%,
+                          #d79f1e calc(25% / var(--repeating-conic-gradient-times)),
+                          #5a922c calc(50% / var(--repeating-conic-gradient-times)), 
+                          #4c7894 calc(75% / var(--repeating-conic-gradient-times)),
+                          #dd7bbb calc(100% / var(--repeating-conic-gradient-times))
+                        )`;
+                        
+                wrapper.style.setProperty('--gradient', gradient);
+                
+                const glow = document.createElement('div');
+                glow.className = 'glowing-effect-glow';
+                
+                wrapper.appendChild(glow);
+                panel.insertBefore(wrapper, panel.firstChild);
+                
+                // Set parameters derived from React demo.tsx
+                panel.dataset.glowingInactiveZone = '0.01';
+                panel.dataset.glowingProximity = '64';
+                panel.glowingWrapper = wrapper;
+            });
+
+            let lastPosition = { x: 0, y: 0 };
+            let requestRef;
+
+            function handleMove(e) {
+                if (requestRef) cancelAnimationFrame(requestRef);
+                
+                const mouseX = e?.clientX ?? lastPosition.x;
+                const mouseY = e?.clientY ?? lastPosition.y;
+                
+                if (e) {
+                    lastPosition = { x: mouseX, y: mouseY };
+                }
+
+                requestRef = requestAnimationFrame(() => {
+                    panels.forEach(panel => {
+                        const wrapper = panel.glowingWrapper;
+                        if (!wrapper) return;
+                        
+                        const rect = panel.getBoundingClientRect();
+                        const center = [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5];
+                        const distanceFromCenter = Math.hypot(mouseX - center[0], mouseY - center[1]);
+                        
+                        const inactiveZone = parseFloat(panel.dataset.glowingInactiveZone);
+                        const proximity = parseFloat(panel.dataset.glowingProximity);
+                        const inactiveRadius = 0.5 * Math.min(rect.width, rect.height) * inactiveZone;
+
+                        if (distanceFromCenter < inactiveRadius) {
+                            wrapper.style.setProperty("--active", "0");
+                            return;
+                        }
+
+                        const isActive =
+                            mouseX > rect.left - proximity &&
+                            mouseX < rect.left + rect.width + proximity &&
+                            mouseY > rect.top - proximity &&
+                            mouseY < rect.top + rect.height + proximity;
+
+                        wrapper.style.setProperty("--active", isActive ? "1" : "0");
+
+                        if (!isActive) return;
+
+                        let targetAngle = (180 * Math.atan2(mouseY - center[1], mouseX - center[0])) / Math.PI + 90;
+                        
+                        wrapper.style.setProperty("--start", targetAngle);
+                    });
+                });
+            }
+
+            document.body.addEventListener('pointermove', handleMove, { passive: true });
+            window.addEventListener('scroll', () => handleMove(), { passive: true });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initGlowingEffects();
+        });
     </script>
 </body>
 
