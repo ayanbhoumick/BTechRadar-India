@@ -12,7 +12,7 @@ Live job market intelligence for Indian CS students.
 - Backend: Java, Spring Boot, Spring Data JPA
 - Database: H2 In-Memory
 - External API: Adzuna Jobs API
-- Frontend: HTML, Tailwind CSS, JavaScript, Chart.js
+- Frontend: HTML, Tailwind CSS, JavaScript, Chart.js, TypeScript
 - Build Tool: Maven
 
 ## How To Run
