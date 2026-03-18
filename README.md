@@ -1,4 +1,4 @@
-# CareerCompass India 🧭
+# BTech Radar India 🧭
 
 Live job market intelligence for Indian CS students.
 
