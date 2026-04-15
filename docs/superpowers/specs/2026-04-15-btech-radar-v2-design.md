@@ -102,7 +102,30 @@ All three APIs are called with the same `role` and `city` parameters passed from
 
 ---
 
-## 4. UI Redesign
+## 4. Animations (GSAP)
+
+GSAP loaded via CDN on all pages. Motion principle: **motion serves meaning only** — no decorative animation.
+
+### Homepage Hero — ASCII Particle Effect
+The "BTech Radar" heading on the homepage is rendered as a text particle effect:
+- A hidden `<canvas>` element renders "BTech Radar" in large text
+- The canvas pixels are sampled to find filled positions
+- Small random ASCII characters (`!@#$%^&*()_+-=[]{}|;:,./<>?~`) are placed as DOM `<span>` elements at those positions
+- On page load, GSAP animates each character from a random scattered position assembling into the letter shapes (staggered, ~0.8s total)
+- On hover, characters briefly scatter and reassemble
+- Works in both light and dark mode (character color matches text token)
+
+### Radar Page Animations
+- **Match score counter:** GSAP counts up to the result percentage when results load
+- **Skill tags:** staggered fade-in as the results panel populates
+- **Section reveals:** subtle fade-up on scroll for the two main panels
+
+### No animation on
+- Nav, theme toggle, form inputs, buttons (instant or CSS transition only)
+
+---
+
+## 5. UI Redesign
 
 Applied to both `index.html` (homepage) and `radar.html`.
 
@@ -139,7 +162,7 @@ Defines: CSS custom properties for the color tokens above, base font stack, typo
 
 ---
 
-## 5. Out of Scope (This Spec)
+## 6. Out of Scope (This Spec)
 - Resume Analyzer feature (future spec)
 - Vercel/Railway hosting setup (deferred)
 - Reed API integration (dropped — UK-focused, not relevant for India)
