@@ -549,18 +549,6 @@ body.home-page {
   --text:           #f0f0f0;
   --text-muted:     #b0b0b0;
   --accent:         #ff3333;
-  --fp-home-color:  rgba(255,255,255,0.45);
-}
-
-/* Light mode home page */
-html:not(.dark) body.home-page {
-  --bg:             #ffffff;
-  --bg-subtle:      #f5f5f5;
-  --card:           #f9f9f9;
-  --border:         #e5e5e5;
-  --text:           #111111;
-  --text-muted:     #666666;
-  --fp-home-color:  rgba(0,0,0,0.10);
 }
 
 /* Card beams: light on dark background */
@@ -572,21 +560,9 @@ body.home-page .card-beam-left,
 body.home-page .card-beam-right {
   background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
 }
-html:not(.dark) body.home-page .card-beam-top,
-html:not(.dark) body.home-page .card-beam-bottom {
-  background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.18) 50%, transparent 100%);
-}
-html:not(.dark) body.home-page .card-beam-left,
-html:not(.dark) body.home-page .card-beam-right {
-  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.18) 50%, transparent 100%);
-}
-
 /* Card arrow hover: white fill + dark text on dark bg */
 body.home-page .card-arrow::before { background: #ffffff; }
 body.home-page .feature-card:hover .card-arrow { color: #111111; }
-html:not(.dark) body.home-page .card-arrow::before { background: #111111; }
-html:not(.dark) body.home-page .feature-card:hover .card-arrow { color: #f0f0f0; }
-
 /* Radar icon: light on dark */
 body.home-page .card-radar { border-color: rgba(255,255,255,0.35); }
 body.home-page .card-radar .radar-sweep {
@@ -601,19 +577,6 @@ body.home-page .card-radar .radar-ring-mid  { border-color: rgba(255,255,255,0.1
 body.home-page .card-radar .radar-ring-inner { border-color: rgba(255,255,255,0.12); }
 body.home-page .card-radar .radar-center-dot { background: #f0f0f0; }
 
-/* Radar icon: dark on light */
-html:not(.dark) body.home-page .card-radar { border-color: rgba(0,0,0,0.35); }
-html:not(.dark) body.home-page .card-radar .radar-sweep {
-  background: conic-gradient(
-    rgba(0,0,0,0.45) 0deg,
-    rgba(0,0,0,0.10) 45deg,
-    transparent 85deg,
-    transparent 360deg
-  );
-}
-html:not(.dark) body.home-page .card-radar .radar-ring-mid  { border-color: rgba(0,0,0,0.18); }
-html:not(.dark) body.home-page .card-radar .radar-ring-inner { border-color: rgba(0,0,0,0.12); }
-html:not(.dark) body.home-page .card-radar .radar-center-dot { background: #111111; }
 .home-main {
   padding: 0 40px 100px;
   max-width: 1200px;
