@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap">
     <link rel="stylesheet" href="/shared/layout.css">
+    <style>
+        .home-top-nav { position: fixed; top: 16px; right: 24px; z-index: 200; }
+    </style>
     <script>
         // Apply saved theme before paint to avoid flash
         (function(){
@@ -19,6 +22,12 @@
 </head>
 <body class="home-page">
 
+    <div class="home-top-nav">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+            <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+    </div>
 
     <div id="starfield-wrap"></div>
 
@@ -202,6 +211,13 @@
             sty.textContent = `@keyframes fpFall{from{background-position:${FROM}}to{background-position:${TO}}}#fp-inner{animation:fpFall 150s linear infinite;}`;
             document.head.appendChild(sty);
         })();
+    </script>
+
+    <script>
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const dark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+        });
     </script>
 
 </body>

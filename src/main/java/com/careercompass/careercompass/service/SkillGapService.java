@@ -21,10 +21,11 @@ public class SkillGapService {
         // 1 — Fetch jobs
         List<JobListing> jobs = jobFetchService.fetchJobs(role, city);
 
-        // 2 — Pull descriptions
+        // 2 — Pull descriptions (skip null/blank)
         List<String> descriptions = new ArrayList<>();
         for (JobListing job : jobs) {
-            descriptions.add(job.getDescription());
+            String desc = job.getDescription();
+            if (desc != null && !desc.isBlank()) descriptions.add(desc);
         }
 
         // 3 — Extract demanded skills
@@ -32,6 +33,7 @@ public class SkillGapService {
         Set<String> demandedSkills = skillMap.keySet();
 
         // 4 — Normalize user skills to lowercase
+        if (userSkills == null) userSkills = new ArrayList<>();
         Set<String> userSkillSet = new HashSet<>();
         for (String s : userSkills) {
             userSkillSet.add(s.toLowerCase());

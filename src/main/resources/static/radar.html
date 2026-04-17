@@ -5,97 +5,428 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTech Radar | Skill Intelligence</title>
     <link rel="stylesheet" href="/shared/layout.css">
+    <style>
+        /* ── Fluid Dropdown ──────────────────────────────────── */
+        .fd-wrap { position: relative; width: 100%; }
+        .fd-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            background: none;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            outline: none;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            color: var(--text);
+            padding: 4px 0 8px;
+            cursor: pointer;
+            transition: border-bottom-color 0.15s;
+            text-align: left;
+        }
+        .fd-trigger:focus,
+        .fd-trigger[aria-expanded="true"] { border-bottom-color: var(--text); }
+        .fd-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text-muted);
+            opacity: 0.4;
+        }
+        .fd-label.has-value { color: var(--text); opacity: 1; }
+        .fd-chevron {
+            flex-shrink: 0;
+            opacity: 0.45;
+            display: flex;
+            align-items: center;
+            margin-left: 8px;
+        }
+        .fd-panel {
+            position: absolute;
+            left: 0; right: 0;
+            top: calc(100% + 8px);
+            z-index: 200;
+            overflow: hidden;
+            height: 0;
+        }
+        .fd-inner {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+        .fd-scroll {
+            max-height: 252px;
+            overflow-y: auto;
+            position: relative;
+            padding: 2px 0;
+        }
+        .fd-highlight {
+            position: absolute;
+            left: 0; right: 0;
+            height: 36px;
+            background: var(--bg-subtle);
+            border-radius: 6px;
+            pointer-events: none;
+            opacity: 0;
+            top: 0;
+        }
+        .fd-item {
+            position: relative;
+            padding: 0 12px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            height: 36px;
+            display: flex;
+            align-items: center;
+            transition: color 0.12s;
+            user-select: none;
+        }
+        .fd-item:hover,
+        .fd-item.fd-selected { color: var(--text); }
+        .fd-item.fd-selected { font-weight: 600; }
+        .fd-group-label {
+            padding: 10px 12px 4px;
+            font-size: 0.58rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+            opacity: 0.45;
+            pointer-events: none;
+        }
+        .fd-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 8px;
+        }
+
+        /* ── Market Demand chart layout ──────────────────────── */
+        .top-chart-row {
+            display: flex;
+            align-items: center;
+            gap: 52px;
+            margin-top: 8px;
+        }
+        .chart-wrapper {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            flex-shrink: 0;
+            width: 340px;
+            height: 340px;
+            max-height: 340px;
+        }
+        #top-legend {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-self: center;
+        }
+        .top-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font);
+            font-size: 0.77rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            opacity: 0;
+            cursor: default;
+        }
+        .top-legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        /* ── Falling Pattern ─────────────────────────────────── */
+        :root  { --fp-color: rgba(0, 0, 0, 0.10); }
+        html.dark { --fp-color: rgba(255, 255, 255, 0.07); }
+
+        #results-content { display: flex; flex-direction: column; }
+        .radar-placeholder { flex: 1; position: relative; min-height: 400px; }
+        .bracket-frame { position: relative; z-index: 1; }
+
+        .fp-wrap {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 72%);
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 72%);
+        }
+        .fp-bg {
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(4px 100px at 0px 235px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 235px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 117.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 252px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 252px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 126px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 150px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 150px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 75px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 253px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 253px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 126.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 204px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 204px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 102px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 134px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 134px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 67px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 179px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 179px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 89.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 299px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 299px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 149.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 215px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 215px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 107.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 281px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 281px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 140.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 158px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 158px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 79px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 210px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 210px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 105px, var(--fp-color) 100%, transparent 150%);
+            background-size:
+                300px 235px, 300px 235px, 300px 235px,
+                300px 252px, 300px 252px, 300px 252px,
+                300px 150px, 300px 150px, 300px 150px,
+                300px 253px, 300px 253px, 300px 253px,
+                300px 204px, 300px 204px, 300px 204px,
+                300px 134px, 300px 134px, 300px 134px,
+                300px 179px, 300px 179px, 300px 179px,
+                300px 299px, 300px 299px, 300px 299px,
+                300px 215px, 300px 215px, 300px 215px,
+                300px 281px, 300px 281px, 300px 281px,
+                300px 158px, 300px 158px, 300px 158px,
+                300px 210px, 300px 210px, 300px 210px;
+            animation: fpFall 150s linear infinite;
+        }
+        @keyframes fpFall {
+            from {
+                background-position:
+                    0px 220px, 3px 220px, 151.5px 337.5px,
+                    25px 24px, 28px 24px, 176.5px 150px,
+                    50px 16px, 53px 16px, 201.5px 91px,
+                    75px 224px, 78px 224px, 226.5px 230.5px,
+                    100px 19px, 103px 19px, 251.5px 121px,
+                    125px 120px, 128px 120px, 276.5px 187px,
+                    150px 31px, 153px 31px, 301.5px 120.5px,
+                    175px 235px, 178px 235px, 326.5px 384.5px,
+                    200px 121px, 203px 121px, 351.5px 228.5px,
+                    225px 224px, 228px 224px, 376.5px 364.5px,
+                    250px 26px, 253px 26px, 401.5px 105px,
+                    275px 75px, 278px 75px, 426.5px 180px;
+            }
+            to {
+                background-position:
+                    0px 6800px, 3px 6800px, 151.5px 6917.5px,
+                    25px 13632px, 28px 13632px, 176.5px 13758px,
+                    50px 5416px, 53px 5416px, 201.5px 5491px,
+                    75px 17175px, 78px 17175px, 226.5px 17301.5px,
+                    100px 5119px, 103px 5119px, 251.5px 5221px,
+                    125px 8428px, 128px 8428px, 276.5px 8495px,
+                    150px 9876px, 153px 9876px, 301.5px 9965.5px,
+                    175px 13391px, 178px 13391px, 326.5px 13540.5px,
+                    200px 14741px, 203px 14741px, 351.5px 14848.5px,
+                    225px 18770px, 228px 18770px, 376.5px 18910.5px,
+                    250px 5082px, 253px 5082px, 401.5px 5161px,
+                    275px 6375px, 278px 6375px, 426.5px 6480px;
+            }
+        }
+        .fp-overlay {
+            position: absolute;
+            inset: 0;
+            backdrop-filter: blur(1em);
+            -webkit-backdrop-filter: blur(1em);
+            background-image: radial-gradient(circle at 50% 50%, transparent 0, transparent 2px, var(--bg) 2px);
+            background-size: 8px 8px;
+        }
+    </style>
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (t === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
 </head>
-<body>
+<body class="radar-page">
 
     <nav class="nav">
-        <a href="/" class="nav-wordmark">BTech Radar</a>
         <div class="nav-actions">
             <a href="/" class="nav-back">← Home</a>
-            <button class="theme-btn" onclick="toggleTheme()">Theme</button>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
         </div>
     </nav>
 
-    <main class="radar-layout">
+    <div class="radar-layout">
 
-        <!-- 01 / Parameters -->
-        <aside class="panel">
-            <div class="section-label">01 / Parameters</div>
+        <!-- ── Sidebar ─────────────────────────────────────────── -->
+        <aside class="radar-sidebar">
 
-            <div class="field-group">
-                <label class="field-label" for="role">Target Role</label>
-                <input id="role" type="text" class="input" placeholder="e.g. Backend Engineer">
+            <div class="sidebar-group">
+                <div class="sidebar-section">
+                    <span class="sidebar-section-label">Query</span>
+                </div>
+                <div class="sidebar-fields">
+                    <div class="sidebar-field">
+                        <label class="sidebar-field-label" for="role">Role</label>
+                        <select id="role" class="sidebar-input">
+                            <option value="">— pick a role —</option>
+                        </select>
+                    </div>
+                    <div class="sidebar-field">
+                        <label class="sidebar-field-label" for="city">City</label>
+                        <select id="city" class="sidebar-input">
+                            <option value="">— pick a city —</option>
+                            <option value="Bengaluru">Bengaluru</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                            <option value="Gurgaon">Gurgaon</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Noida">Noida</option>
+                            <option value="Pune">Pune</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Kolkata">Kolkata</option>
+                            <option value="Ahmedabad">Ahmedabad</option>
+                            <option value="Agartala">Agartala</option>
+                            <option value="Aizawl">Aizawl</option>
+                            <option value="Amritsar">Amritsar</option>
+                            <option value="Bhopal">Bhopal</option>
+                            <option value="Bhubaneswar">Bhubaneswar</option>
+                            <option value="Chandigarh">Chandigarh</option>
+                            <option value="Coimbatore">Coimbatore</option>
+                            <option value="Dehradun">Dehradun</option>
+                            <option value="Dispur">Dispur</option>
+                            <option value="Gangtok">Gangtok</option>
+                            <option value="Goa">Goa</option>
+                            <option value="Guwahati">Guwahati</option>
+                            <option value="Imphal">Imphal</option>
+                            <option value="Indore">Indore</option>
+                            <option value="Itanagar">Itanagar</option>
+                            <option value="Jaipur">Jaipur</option>
+                            <option value="Jammu">Jammu</option>
+                            <option value="Kochi">Kochi</option>
+                            <option value="Kohima">Kohima</option>
+                            <option value="Leh">Leh</option>
+                            <option value="Lucknow">Lucknow</option>
+                            <option value="Ludhiana">Ludhiana</option>
+                            <option value="Madurai">Madurai</option>
+                            <option value="Mangaluru">Mangaluru</option>
+                            <option value="Nagpur">Nagpur</option>
+                            <option value="Patna">Patna</option>
+                            <option value="Port Blair">Port Blair</option>
+                            <option value="Puducherry">Puducherry</option>
+                            <option value="Raipur">Raipur</option>
+                            <option value="Ranchi">Ranchi</option>
+                            <option value="Shillong">Shillong</option>
+                            <option value="Shimla">Shimla</option>
+                            <option value="Srinagar">Srinagar</option>
+                            <option value="Surat">Surat</option>
+                            <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+                            <option value="Tiruchirappalli">Tiruchirappalli</option>
+                            <option value="Vadodara">Vadodara</option>
+                            <option value="Vijayawada">Vijayawada</option>
+                            <option value="Visakhapatnam">Visakhapatnam</option>
+                        </select>
+                    </div>
+                    <div class="sidebar-field">
+                        <label class="sidebar-field-label" for="userSkills">Skills</label>
+                        <input id="userSkills" type="text" class="sidebar-input"
+                               placeholder="React, Python, Docker, AWS...">
+                    </div>
+                </div>
             </div>
 
-            <div class="field-group">
-                <label class="field-label" for="city">Target City</label>
-                <select id="city" class="input">
-                    <option value="Bengaluru">Bengaluru</option>
-                    <option value="Hyderabad">Hyderabad</option>
-                    <option value="Gurgaon">Gurgaon</option>
-                    <option value="Noida">Noida</option>
-                    <option value="Pune">Pune</option>
-                    <option value="Chennai">Chennai</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Kolkata">Kolkata</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Kochi">Kochi</option>
-                    <option value="Coimbatore">Coimbatore</option>
-                    <option value="Bhubaneswar">Bhubaneswar</option>
-                    <option value="Indore">Indore</option>
-                    <option value="Jaipur">Jaipur</option>
-                    <option value="Chandigarh">Chandigarh</option>
-                    <option value="Visakhapatnam">Visakhapatnam</option>
-                </select>
+            <div class="sidebar-group">
+                <div class="sidebar-section">
+                    <span class="sidebar-section-label">Analysis</span>
+                </div>
+                <div class="sidebar-actions">
+                    <button class="sidebar-btn" id="btn-gap" onclick="handleApi('gap')">
+                        Gap Analysis <span>→</span>
+                    </button>
+                    <button class="sidebar-btn" id="btn-curriculum" onclick="handleApi('curriculum')">
+                        Curriculum Audit <span>◫</span>
+                    </button>
+                    <button class="sidebar-btn" id="btn-top" onclick="handleApi('top')">
+                        Market Demand <span>↑</span>
+                    </button>
+                </div>
             </div>
 
-            <div class="field-group">
-                <label class="field-label" for="userSkills">Current Skills</label>
-                <textarea id="userSkills" rows="3" class="input" placeholder="Java, Python, Git..."></textarea>
+            <div class="sidebar-group">
+                <div class="sidebar-meta">
+                    <div class="meta-row">
+                        <span class="meta-key">SYS</span>
+                        <span class="meta-val online">Online</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-key">QRY</span>
+                        <span class="meta-val" id="meta-qry">—</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-key">LOC</span>
+                        <span class="meta-val" id="meta-loc">—</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="btn-group">
-                <button class="btn" onclick="handleApi('gap')">
-                    <span>Analyze Skill Gap</span>
-                    <span>→</span>
-                </button>
-                <button class="btn" onclick="handleApi('curriculum')">
-                    <span>Audit Curriculum</span>
-                    <span>◫</span>
-                </button>
-                <button class="btn" onclick="handleApi('top')">
-                    <span>Market Demand</span>
-                    <span>↑</span>
-                </button>
-            </div>
         </aside>
 
-        <!-- 02 / Intelligence Output -->
-        <section class="panel output-panel">
-            <div class="section-label">02 / Intelligence Output</div>
+        <!-- ── Output ───────────────────────────────────────────── -->
+        <main class="radar-output" id="radar-output">
 
             <div id="loading-state" class="loading-state hidden">
-                <div class="spinner"></div>
+                <div class="sq-loader-sm">
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                </div>
                 <p>Processing Market Data...</p>
             </div>
 
             <div id="results-content">
-                <div id="placeholder-content" class="placeholder">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-                    </svg>
-                    <p>Awaiting Input Parameters</p>
+                <div class="radar-placeholder">
+                    <div class="fp-wrap">
+                        <div class="fp-bg"></div>
+                        <div class="fp-overlay"></div>
+                    </div>
+                    <div class="bracket-frame">
+                        <p class="bracket-text">Select a role and run analysis</p>
+                    </div>
                 </div>
             </div>
-        </section>
-    </main>
 
-    <footer class="footer">
-        <span>© 2026 BTech Radar India</span>
-        <span>Built for Indian CS Ecosystem</span>
-    </footer>
+        </main>
 
-    <!-- ── Templates ──────────────────────────────────────── -->
+    </div>
+
+    <!-- ── Templates ──────────────────────────────────────────── -->
     <template id="tpl-gap">
         <div class="gap-result">
             <div class="result-header">
@@ -123,8 +454,11 @@
     <template id="tpl-top">
         <div class="top-result">
             <h3>Market Demand</h3>
-            <div class="chart-wrapper">
-                <canvas id="topChart"></canvas>
+            <div class="top-chart-row">
+                <div class="chart-wrapper">
+                    <canvas id="topChart"></canvas>
+                </div>
+                <div id="top-legend"></div>
             </div>
         </div>
     </template>
@@ -142,39 +476,114 @@
                 </div>
             </div>
             <div id="subject-scores" class="subjects-grid"></div>
+            <p class="curriculum-source-note">Curriculum: Bennett University B.Tech CSE — 2024–2028 batch</p>
         </div>
     </template>
 
-    <!-- ── Scripts ────────────────────────────────────────── -->
+    <!-- ── Scripts ────────────────────────────────────────────── -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script>
-        // ── Theme ────────────────────────────────────────────────
-        if (localStorage.getItem('theme') === 'dark' ||
-            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            if (myChart) {
-                const isDark = document.documentElement.classList.contains('dark');
-                myChart.options.plugins.legend.labels.color = isDark ? '#f0f0f0' : '#111111';
-                myChart.update();
-            }
-        }
+        const ROLE_GROUPS = [
+            {
+                id: 'web',
+                label: 'Web & Full Stack',
+                roles: [
+                    { label: 'Frontend',   value: 'Frontend Engineer' },
+                    { label: 'Backend',    value: 'Backend Engineer' },
+                    { label: 'Full Stack', value: 'Full Stack Engineer' },
+                ]
+            },
+            {
+                id: 'data',
+                label: 'Data & AI',
+                roles: [
+                    { label: 'AI Engineer',      value: 'AI Engineer' },
+                    { label: 'AI & Data Sci',    value: 'AI and Data Scientist' },
+                    { label: 'Data Engineer',    value: 'Data Engineer' },
+                    { label: 'Data Analyst',     value: 'Data Analyst' },
+                    { label: 'Machine Learning', value: 'Machine Learning Engineer' },
+                    { label: 'MLOps',            value: 'MLOps Engineer' },
+                    { label: 'BI Analyst',       value: 'BI Analyst' },
+                ]
+            },
+            {
+                id: 'infra',
+                label: 'Infra & Security',
+                roles: [
+                    { label: 'DevOps',         value: 'DevOps Engineer' },
+                    { label: 'DevSecOps',      value: 'DevSecOps Engineer' },
+                    { label: 'Cyber Security', value: 'Cyber Security Engineer' },
+                    { label: 'DB Engineer',    value: 'Database Engineer' },
+                ]
+            },
+            {
+                id: 'mobile',
+                label: 'Mobile & Gaming',
+                roles: [
+                    { label: 'Android',          value: 'Android Developer' },
+                    { label: 'iOS',              value: 'iOS Developer' },
+                    { label: 'Game Dev',         value: 'Game Developer' },
+                    { label: 'Server-Side Game', value: 'Server Side Game Developer' },
+                    { label: 'Blockchain',       value: 'Blockchain Developer' },
+                ]
+            },
+            {
+                id: 'quality',
+                label: 'Eng & Quality',
+                roles: [
+                    { label: 'Software Architect', value: 'Software Architect' },
+                    { label: 'QA',                 value: 'QA Engineer' },
+                    { label: 'Technical Writer',   value: 'Technical Writer' },
+                    { label: 'UX Design',          value: 'UX Designer' },
+                ]
+            },
+            {
+                id: 'product',
+                label: 'Product & Leadership',
+                roles: [
+                    { label: 'Product Manager', value: 'Product Manager' },
+                    { label: 'Eng Manager',     value: 'Engineering Manager' },
+                    { label: 'Dev Relations',   value: 'Developer Relations' },
+                ]
+            },
+        ];
+
+        // Populate role select from ROLE_GROUPS
+        (function () {
+            const sel = document.getElementById('role');
+            ROLE_GROUPS.forEach(g => {
+                const og = document.createElement('optgroup');
+                og.label = g.label;
+                g.roles.forEach(r => {
+                    const o = document.createElement('option');
+                    o.value = r.value;
+                    o.textContent = r.label;
+                    og.appendChild(o);
+                });
+                sel.appendChild(og);
+            });
+        })();
 
         // ── API ──────────────────────────────────────────────────
         let myChart = null;
         const resultsEl = document.getElementById('results-content');
         const loaderEl  = document.getElementById('loading-state');
 
+        const META_LABELS = { gap: 'Gap', curriculum: 'Audit', top: 'Market' };
+
         async function handleApi(type) {
             const role       = document.getElementById('role').value.trim();
             const city       = document.getElementById('city').value;
             const userSkills = document.getElementById('userSkills').value;
 
-            if (!role) { alert('Please enter a target role'); return; }
+            if (!role) { alert('Please select a role'); return; }
+
+            document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${type}`).classList.add('active');
+
+            document.getElementById('meta-qry').textContent = META_LABELS[type];
+            document.getElementById('meta-loc').textContent = city;
 
             resultsEl.classList.add('hidden');
             loaderEl.classList.remove('hidden');
@@ -188,7 +597,7 @@
 
                 if (type === 'gap') {
                     const skills = userSkills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-                    if (!skills.length) { alert('Please enter your current skills'); loaderEl.classList.add('hidden'); resultsEl.classList.remove('hidden'); return; }
+                    if (!skills.length) { alert('Please enter your skills'); loaderEl.classList.add('hidden'); resultsEl.classList.remove('hidden'); return; }
                     const res  = await fetch(`/api/skills/gap?role=${encodeURIComponent(role)}&city=${encodeURIComponent(city)}`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(skills)
                     });
@@ -208,14 +617,14 @@
             } catch (err) {
                 loaderEl.classList.add('hidden');
                 resultsEl.classList.remove('hidden');
-                resultsEl.innerHTML = `<p style="color:var(--accent);font-size:0.75rem;font-weight:700;padding:40px 0;text-align:center">Error fetching data. Make sure the server is running.</p>`;
+                resultsEl.innerHTML = `<div class="result-pad"><p style="color:var(--accent);font-size:0.75rem;font-weight:700;padding:40px 0;text-align:center">Error fetching data. Make sure the server is running.</p></div>`;
                 console.error(err);
             }
         }
 
         function showResults(renderFn) {
             loaderEl.classList.add('hidden');
-            resultsEl.innerHTML = '';
+            resultsEl.innerHTML = '<div class="result-pad" id="result-inner"></div>';
             resultsEl.classList.remove('hidden');
             renderFn();
             gsap.fromTo(resultsEl, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
@@ -224,14 +633,13 @@
         // ── Render: Gap ──────────────────────────────────────────
         function renderGap(data) {
             const tpl = document.getElementById('tpl-gap').content.cloneNode(true);
-            resultsEl.appendChild(tpl);
+            document.getElementById('result-inner').appendChild(tpl);
 
             const scoreEl   = document.getElementById('res-score');
             const matchedEl = document.getElementById('res-matched');
             const missingEl = document.getElementById('res-missing');
             const recEl     = document.getElementById('res-rec');
 
-            // Animated score counter
             gsap.to({ val: 0 }, {
                 val: Math.round(data.matchScore),
                 duration: 1.2,
@@ -260,17 +668,15 @@
                 recEl.appendChild(li);
             });
 
-            // Staggered tag appearance
             gsap.to('.skill-tag', { opacity: 1, duration: 0.3, stagger: 0.04, ease: 'power2.out', delay: 0.3 });
         }
 
         // ── Render: Top Demand ───────────────────────────────────
         function renderTop(data) {
             const tpl = document.getElementById('tpl-top').content.cloneNode(true);
-            resultsEl.appendChild(tpl);
+            document.getElementById('result-inner').appendChild(tpl);
 
-            const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#f0f0f0' : '#111111';
+            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111111';
 
             if (myChart) myChart.destroy();
 
@@ -284,23 +690,27 @@
                     if (!meta.data.length) return;
                     const { x: cx, y: cy } = meta.data[0];
                     const c = chart.ctx;
+                    const liveText = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111111';
+                    const liveMuted = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#666';
                     c.restore();
                     c.font = `bold 2rem 'Geist Mono', monospace`;
                     c.textBaseline = 'middle';
-                    c.fillStyle = textColor;
+                    c.fillStyle = liveText;
                     const text = totalDemand.toLocaleString();
                     c.fillText(text, Math.round(cx - c.measureText(text).width / 2), cy - 8);
                     c.font = `0.7rem 'Geist Mono', monospace`;
-                    c.fillStyle = isDark ? '#888' : '#666';
+                    c.fillStyle = liveMuted;
                     const sub = 'Total Postings';
                     c.fillText(sub, Math.round(cx - c.measureText(sub).width / 2), cy + 16);
                     c.save();
                 }
             };
 
-            const palette = ['#ff3333','#ff6666','#ff9999','#ff0000','#cc0000',
-                             '#ff4444','#ff2222','#ff8888','#ffaaaa','#ff5555',
-                             '#dd0000','#bb0000','#ee3333','#ff1111','#cc3333'];
+            const palette = [
+              '#c41111', '#d42222', '#e44433', '#f05544', '#f56633',
+              '#f07722', '#e88811', '#d49900', '#bb7700', '#a45500',
+              '#cc3344', '#dd5533', '#e87722', '#d48800', '#b86600'
+            ];
 
             myChart = new Chart(ctx, {
                 type: 'doughnut',
@@ -310,34 +720,39 @@
                         data: data.map(d => d.demandCount),
                         backgroundColor: palette.slice(0, data.length),
                         borderWidth: 1,
-                        borderColor: isDark ? '#0a0a0a' : '#ffffff',
+                        borderColor: '#f5f5f5',
                         hoverOffset: 6
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     cutout: '72%',
                     plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                font: { family: "'Geist Mono', monospace", size: 11, weight: '600' },
-                                color: textColor,
-                                boxWidth: 12,
-                                padding: 12
-                            }
-                        }
+                        legend: { display: false }
                     }
                 },
                 plugins: [centerTextPlugin]
             });
+
+            // Custom HTML legend with stagger animation
+            const legendEl = document.getElementById('top-legend');
+            data.forEach((d, i) => {
+                const item = document.createElement('div');
+                item.className = 'top-legend-item';
+                item.innerHTML = `<span class="top-legend-swatch" style="background:${palette[i % palette.length]}"></span><span>${d.name}</span>`;
+                legendEl.appendChild(item);
+            });
+            gsap.fromTo('.top-legend-item',
+                { opacity: 0, x: 14 },
+                { opacity: 1, x: 0, duration: 0.3, stagger: 0.05, ease: 'power2.out', delay: 0.2 }
+            );
         }
 
         // ── Render: Curriculum ───────────────────────────────────
         function renderCurriculum(data) {
             const tpl = document.getElementById('tpl-curriculum').content.cloneNode(true);
-            resultsEl.appendChild(tpl);
+            document.getElementById('result-inner').appendChild(tpl);
 
             setTimeout(() => {
                 const pct = Math.round(data.coveragePercentage);
@@ -354,6 +769,178 @@
                     </div>`;
             });
         }
+    </script>
+
+    <script>
+        // ── Fluid Dropdown ────────────────────────────────────────
+        (function () {
+            function buildFluidDropdown(selectEl) {
+                const wrap = document.createElement('div');
+                wrap.className = 'fd-wrap';
+                selectEl.parentNode.insertBefore(wrap, selectEl);
+                selectEl.style.display = 'none';
+                wrap.appendChild(selectEl);
+
+                // Trigger
+                const trigger = document.createElement('button');
+                trigger.type = 'button';
+                trigger.className = 'fd-trigger';
+                trigger.setAttribute('aria-expanded', 'false');
+                trigger.setAttribute('aria-haspopup', 'listbox');
+
+                const label = document.createElement('span');
+                label.className = 'fd-label';
+                const initOpt = selectEl.options[selectEl.selectedIndex];
+                label.textContent = initOpt ? initOpt.text : '—';
+                if (initOpt && initOpt.value) label.classList.add('has-value');
+
+                const chevron = document.createElement('span');
+                chevron.className = 'fd-chevron';
+                chevron.innerHTML = '<svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1L5.5 6L10 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+                trigger.appendChild(label);
+                trigger.appendChild(chevron);
+                wrap.appendChild(trigger);
+
+                // Panel
+                const panel = document.createElement('div');
+                panel.className = 'fd-panel';
+                const inner = document.createElement('div');
+                inner.className = 'fd-inner';
+                const scroll = document.createElement('div');
+                scroll.className = 'fd-scroll';
+                scroll.setAttribute('role', 'listbox');
+
+                const highlight = document.createElement('div');
+                highlight.className = 'fd-highlight';
+                scroll.appendChild(highlight);
+                inner.appendChild(scroll);
+                panel.appendChild(inner);
+                wrap.appendChild(panel);
+
+                const items = [];
+                let isOpen = false;
+
+                function createItem(value, text) {
+                    const item = document.createElement('div');
+                    item.className = 'fd-item';
+                    item.dataset.value = value;
+                    item.textContent = text;
+                    item.setAttribute('role', 'option');
+
+                    item.addEventListener('mouseenter', () => {
+                        gsap.to(highlight, {
+                            y: item.offsetTop,
+                            height: item.offsetHeight || 36,
+                            opacity: 1,
+                            duration: 0.22,
+                            ease: 'power2.out'
+                        });
+                    });
+
+                    item.addEventListener('click', () => {
+                        selectEl.value = value;
+                        label.textContent = text;
+                        label.classList.add('has-value');
+                        items.forEach(i => i.classList.remove('fd-selected'));
+                        item.classList.add('fd-selected');
+                        closeDropdown();
+                    });
+
+                    return item;
+                }
+
+                // Populate items from select
+                const optgroups = selectEl.querySelectorAll('optgroup');
+                if (optgroups.length > 0) {
+                    optgroups.forEach((og, gi) => {
+                        if (gi > 0) {
+                            const div = document.createElement('div');
+                            div.className = 'fd-divider';
+                            scroll.appendChild(div);
+                        }
+                        const grpLbl = document.createElement('div');
+                        grpLbl.className = 'fd-group-label';
+                        grpLbl.textContent = og.label;
+                        scroll.appendChild(grpLbl);
+
+                        og.querySelectorAll('option').forEach(opt => {
+                            const item = createItem(opt.value, opt.text);
+                            if (opt.value === selectEl.value) item.classList.add('fd-selected');
+                            items.push(item);
+                            scroll.appendChild(item);
+                        });
+                    });
+                } else {
+                    Array.from(selectEl.options).forEach(opt => {
+                        if (!opt.value) return;
+                        const item = createItem(opt.value, opt.text);
+                        if (opt.value === selectEl.value) item.classList.add('fd-selected');
+                        items.push(item);
+                        scroll.appendChild(item);
+                    });
+                }
+
+                function openDropdown() {
+                    isOpen = true;
+                    trigger.setAttribute('aria-expanded', 'true');
+
+                    // Measure height, animate from 0
+                    panel.style.height = 'auto';
+                    const fullH = panel.offsetHeight;
+                    panel.style.height = '0px';
+                    gsap.to(panel, { height: fullH, duration: 0.35, ease: 'power3.out', overwrite: true });
+
+                    // Chevron spin
+                    gsap.to(chevron, { rotate: 180, duration: 0.22, ease: 'power2.out' });
+
+                    // Stagger items + group labels in DOM order
+                    const animEls = scroll.querySelectorAll('.fd-item, .fd-group-label, .fd-divider');
+                    gsap.fromTo(animEls,
+                        { opacity: 0, y: -7 },
+                        { opacity: function(i, el) {
+                            return el.classList.contains('fd-group-label') ? 0.45 : 1;
+                          },
+                          y: 0, duration: 0.2, stagger: 0.016, ease: 'power2.out', delay: 0.07 }
+                    );
+
+                    // Position highlight on current selection
+                    const selItem = items.find(i => i.dataset.value === selectEl.value);
+                    if (selItem) {
+                        gsap.set(highlight, { y: selItem.offsetTop, height: selItem.offsetHeight || 36, opacity: 1 });
+                    }
+                }
+
+                function closeDropdown() {
+                    isOpen = false;
+                    trigger.setAttribute('aria-expanded', 'false');
+                    gsap.to(panel, { height: 0, duration: 0.22, ease: 'power2.in', overwrite: true });
+                    gsap.to(chevron, { rotate: 0, duration: 0.2, ease: 'power2.out' });
+                    gsap.to(highlight, { opacity: 0, duration: 0.1 });
+                }
+
+                trigger.addEventListener('click', () => isOpen ? closeDropdown() : openDropdown());
+
+                document.addEventListener('click', e => {
+                    if (isOpen && !wrap.contains(e.target)) closeDropdown();
+                });
+
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape' && isOpen) closeDropdown();
+                });
+            }
+
+            buildFluidDropdown(document.getElementById('role'));
+            buildFluidDropdown(document.getElementById('city'));
+        })();
+    </script>
+
+    <script>
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const dark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+            if (myChart) myChart.update();
+        });
     </script>
 </body>
 </html>

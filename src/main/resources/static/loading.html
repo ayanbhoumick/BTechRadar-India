@@ -58,36 +58,56 @@
             gap: 24px;
             font-family: 'Geist Mono', monospace;
         }
-        #tetris-canvas {
-            border: 1px solid rgba(0,0,0,0.1);
-            display: block;
-            image-rendering: pixelated;
-            background: rgba(255,255,255,0.5);
-            backdrop-filter: blur(4px);
+
+        /* ── Square loader ────────────────────────────────────── */
+        .sq-loader {
+            width: 96px;
+            height: 96px;
+            transform: rotate(45deg);
+            position: relative;
         }
+        .sq {
+            position: absolute;
+            top: 0; left: 0;
+            width: 28px; height: 28px;
+            margin: 2px;
+            background: rgba(0,0,0,0.82);
+            animation: squareAnim 10s ease-in-out infinite both;
+        }
+        .sq:nth-child(1) { animation-delay: -10s; }
+        .sq:nth-child(2) { animation-delay: calc(-10s + 1.4286s); }
+        .sq:nth-child(3) { animation-delay: calc(-10s + 2.8571s); }
+        .sq:nth-child(4) { animation-delay: calc(-10s + 4.2857s); }
+        .sq:nth-child(5) { animation-delay: calc(-10s + 5.7143s); }
+        .sq:nth-child(6) { animation-delay: calc(-10s + 7.1429s); }
+        .sq:nth-child(7) { animation-delay: calc(-10s + 8.5714s); }
+
+        @keyframes squareAnim {
+            0%     { left: 0;    top: 0;  }
+            10.5%  { left: 0;    top: 0;  }
+            12.5%  { left: 32px; top: 0;  }
+            23%    { left: 32px; top: 0;  }
+            25%    { left: 64px; top: 0;  }
+            35.5%  { left: 64px; top: 0;  }
+            37.5%  { left: 64px; top: 32px; }
+            48%    { left: 64px; top: 32px; }
+            50%    { left: 32px; top: 32px; }
+            60.5%  { left: 32px; top: 32px; }
+            62.5%  { left: 32px; top: 64px; }
+            73%    { left: 32px; top: 64px; }
+            75%    { left: 0;    top: 64px; }
+            85.5%  { left: 0;    top: 64px; }
+            87.5%  { left: 0;    top: 32px; }
+            98%    { left: 0;    top: 32px; }
+            100%   { left: 0;    top: 0;  }
+        }
+
         .label {
-            font-size: 0.58rem;
+            font-size: 0.7rem;
             letter-spacing: 0.24em;
             text-transform: uppercase;
-            color: rgba(0,0,0,0.35);
+            color: rgba(0,0,0,0.4);
         }
-        .progress-bar {
-            width: 160px;
-            height: 1px;
-            background: rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            transform: scaleX(0);
-            transform-origin: left;
-            animation: progressFill 10s linear forwards;
-        }
-        @keyframes progressFill { to { transform: scaleX(1); } }
     </style>
 </head>
 <body>
@@ -110,10 +130,17 @@
         </div>
     </div>
 
-    <!-- Tetris + UI -->
+    <!-- Square loader + UI -->
     <div id="overlay">
-        <canvas id="tetris-canvas"></canvas>
-        <div class="progress-bar"></div>
+        <div class="sq-loader">
+            <div class="sq"></div>
+            <div class="sq"></div>
+            <div class="sq"></div>
+            <div class="sq"></div>
+            <div class="sq"></div>
+            <div class="sq"></div>
+            <div class="sq"></div>
+        </div>
         <p class="label">Initialising Radar</p>
     </div>
 
@@ -161,109 +188,11 @@
         })();
     })();
 
-    // ── Tetris loader ─────────────────────────────────────────
-    (function () {
-        const COLS = 8, ROWS = 16, CELL = 22;
-        const canvas = document.getElementById('tetris-canvas');
-        canvas.width  = COLS * CELL;
-        canvas.height = ROWS * CELL;
-        const ctx = canvas.getContext('2d');
-
-        const SHAPES = [
-            [[1,1,1,1]],
-            [[1,1],[1,1]],
-            [[0,1,0],[1,1,1]],
-            [[1,0],[1,0],[1,1]],
-            [[0,1,1],[1,1,0]],
-            [[1,1,0],[0,1,1]],
-            [[0,1],[0,1],[1,1]],
-        ];
-
-        let grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
-        let piece = null;
-
-        const rotate = s => Array.from({length: s[0].length}, (_, j) =>
-            Array.from({length: s.length}, (_, i) => s[s.length-1-i][j]));
-
-        function newPiece() {
-            let s = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-            const r = Math.floor(Math.random() * 4);
-            for (let i = 0; i < r; i++) s = rotate(s);
-            return { shape: s, x: Math.floor(Math.random() * (COLS - s[0].length + 1)), y: -s.length };
-        }
-
-        function canPlace(p, nx, ny) {
-            for (let r = 0; r < p.shape.length; r++)
-                for (let c = 0; c < p.shape[r].length; c++) {
-                    if (!p.shape[r][c]) continue;
-                    const gx = nx+c, gy = ny+r;
-                    if (gx < 0 || gx >= COLS || gy >= ROWS) return false;
-                    if (gy >= 0 && grid[gy][gx]) return false;
-                }
-            return true;
-        }
-
-        function placePiece(p) {
-            for (let r = 0; r < p.shape.length; r++)
-                for (let c = 0; c < p.shape[r].length; c++)
-                    if (p.shape[r][c] && p.y+r >= 0) grid[p.y+r][p.x+c] = 1;
-        }
-
-        function clearLines() {
-            const kept = grid.filter(row => !row.every(c => c));
-            const added = ROWS - kept.length;
-            grid = [...Array.from({length: added}, () => Array(COLS).fill(0)), ...kept];
-        }
-
-        function checkReset() {
-            if (grid.slice(0,3).flat().filter(c=>c).length > COLS*3*0.6) {
-                grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
-                return true;
-            }
-            return false;
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-            ctx.lineWidth = 0.5;
-            for (let r = 0; r <= ROWS; r++) { ctx.beginPath(); ctx.moveTo(0,r*CELL); ctx.lineTo(canvas.width,r*CELL); ctx.stroke(); }
-            for (let c = 0; c <= COLS; c++) { ctx.beginPath(); ctx.moveTo(c*CELL,0); ctx.lineTo(c*CELL,canvas.height); ctx.stroke(); }
-
-            ctx.fillStyle = 'rgba(0,0,0,0.82)';
-            for (let r = 0; r < ROWS; r++)
-                for (let c = 0; c < COLS; c++)
-                    if (grid[r][c]) ctx.fillRect(c*CELL+1, r*CELL+1, CELL-2, CELL-2);
-
-            if (piece) {
-                ctx.fillStyle = 'rgba(0,0,0,0.9)';
-                for (let r = 0; r < piece.shape.length; r++)
-                    for (let c = 0; c < piece.shape[r].length; c++)
-                        if (piece.shape[r][c] && piece.y+r >= 0)
-                            ctx.fillRect((piece.x+c)*CELL+1, (piece.y+r)*CELL+1, CELL-2, CELL-2);
-            }
-        }
-
-        piece = newPiece();
-        let last = 0;
-        (function loop(ts) {
-            if (ts - last >= 80) {
-                last = ts;
-                checkReset();
-                if (!piece) piece = newPiece();
-                if (canPlace(piece, piece.x, piece.y+1)) { piece.y++; }
-                else { placePiece(piece); clearLines(); piece = newPiece(); }
-            }
-            draw();
-            requestAnimationFrame(loop);
-        })(0);
-    })();
-
-    // ── Redirect after 10s ────────────────────────────────────
+    // ── Redirect after 5s ────────────────────────────────────
     setTimeout(() => {
         document.body.classList.add('fade-out');
         setTimeout(() => window.location.href = '/radar.html', 700);
-    }, 10000);
+    }, 5000);
     </script>
 </body>
 </html>

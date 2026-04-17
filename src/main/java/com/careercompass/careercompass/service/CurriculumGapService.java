@@ -53,11 +53,12 @@ public class CurriculumGapService {
 
     public CurriculumGapReport analyzeCurriculum(List<String> studentSkills, String role, String city) {
 
-        // Step 1 — Fetch jobs and extract descriptions
+        // Step 1 — Fetch jobs and extract descriptions (skip null/blank)
         List<JobListing> jobs = jobFetchService.fetchJobs(role, city);
         List<String> descriptions = new ArrayList<>();
         for (JobListing job : jobs) {
-            descriptions.add(job.getDescription());
+            String desc = job.getDescription();
+            if (desc != null && !desc.isBlank()) descriptions.add(desc);
         }
 
         // Step 2 — Get demanded skills
@@ -65,6 +66,7 @@ public class CurriculumGapService {
         Set<String> demandedSkills = new HashSet<>(skillMap.keySet());
         
         // Remove skills the student already knows
+        if (studentSkills == null) studentSkills = new ArrayList<>();
         for (String s : studentSkills) {
             demandedSkills.remove(s.toLowerCase());
         }

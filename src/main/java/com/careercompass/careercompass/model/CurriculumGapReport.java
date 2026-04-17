@@ -25,7 +25,7 @@ public class CurriculumGapReport {
 
     public Double getCoveragePercentage(){return coveragePercentage; }
     public List<String> getCoveredSkills(){return coveredSkills; }
-    public List<String> getUncovredSkills(){return uncoveredSkills; }
+    public List<String> getUncoveredSkills(){return uncoveredSkills; }
     public Map<String, Double> getSubjectRelevanceScores(){return subjectRelevanceScores; }
 
 

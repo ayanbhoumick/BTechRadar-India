@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 CLAUDE.md
+**/.DS_Store
+.DS_Store
+DESIGN.md
 
 ### STS ###
 .apt_generated

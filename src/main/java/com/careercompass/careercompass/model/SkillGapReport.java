@@ -1,7 +1,7 @@
 package com.careercompass.careercompass.model;
 // matchedSkills
 // missingSkills
-// reccomendations
+// recommendations
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ public class SkillGapReport {
     public Double getMatchScore() {return matchScore; }
     public List<String> getMatchedSkills() {return matchedSkills; }
     public List<String> getMissingSkills() {return missingSkills; }
-    public List<String> getReccommendations() {return recommendations; }
+    public List<String> getRecommendations() {return recommendations; }
 
 
 }
