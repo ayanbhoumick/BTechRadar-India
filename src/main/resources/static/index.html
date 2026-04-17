@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,13 +8,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap">
     <link rel="stylesheet" href="/shared/layout.css">
+    <script>
+        // Apply saved theme before paint to avoid flash
+        (function(){
+            var t = localStorage.getItem('theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (t === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
 </head>
-<body class="wave-page">
+<body class="home-page">
 
-    <!-- ── Starfield Background ──────────────────────────────── -->
-    <div id="starfield-wrap">
-        <canvas id="starfield-canvas"></canvas>
-    </div>
+
+    <div id="starfield-wrap"></div>
 
 <main class="home-main">
         <section class="hero-section">
@@ -29,7 +35,7 @@
         </section>
 
         <section class="cards-section">
-            <a href="/loading.html" class="feature-card">
+            <div class="feature-card">
                 <span class="card-number">01 / Radar</span>
                 <h2 class="card-title">Radar
                     <span class="card-radar" aria-hidden="true">
@@ -41,9 +47,9 @@
                 </h2>
                 <p class="card-desc">Analyse job market demand, identify skill gaps, and audit your BTech curriculum against live industry data.</p>
                 <div class="card-footer">
-                    <span class="card-arrow">Launch Radar →</span>
+                    <a href="/loading.html" class="card-arrow">Launch Radar →</a>
                 </div>
-            </a>
+            </div>
             <div class="feature-card disabled">
                 <span class="card-number">02 / Resume</span>
                 <h2 class="card-title">Analyse my Resume</h2>
@@ -94,108 +100,109 @@
             const title = document.querySelector('.hero-title');
             if (!title) return;
             scrambleText(title, 'BTech Radar', 1.2, 0.04);
+
+            // Inject animated border beams into each feature card
+            document.querySelectorAll('.feature-card').forEach(card => {
+                ['top','bottom','left','right'].forEach(side => {
+                    const el = document.createElement('div');
+                    el.className = `card-beam card-beam-${side}`;
+                    card.appendChild(el);
+                });
+            });
+
         });
     </script>
 
     <script>
-        // ── Starfield (ported from Starfield component) ───────────
+        // ── Falling Pattern ──────────────────────────────────────
+        // Port of FallingPattern (@paper-design) — CSS background-position
+        // animation, no canvas/WebGL/npm required.
         (function () {
-            const canvas = document.getElementById('starfield-canvas');
-            const wrap   = document.getElementById('starfield-wrap');
+            const wrap = document.getElementById('starfield-wrap');
+            const C  = 'rgba(255,255,255,0.45)'; // line colour
 
-            const QUANTITY   = 512;
-            const SPEED      = 2;
-            const STAR_COLOR = 'rgba(255,255,255,1)';
-            const BG_FILL    = 'rgba(0,0,0,1)';
-            const ratio      = QUANTITY / 2;
+            // ── Layer 1: the falling lines
+            const inner = document.createElement('div');
+            inner.id = 'fp-inner';
+            inner.style.cssText = 'position:absolute;inset:0;background-repeat:repeat;';
 
-            let ctx, w, h, cx, cy, depth, colorRatio, stars = [];
+            // ── Layer 2: blur + dot-grid overlay (glass effect)
+            const overlay = document.createElement('div');
+            overlay.style.cssText = [
+                'position:absolute;inset:0;',
+                'backdrop-filter:blur(16px);',
+                '-webkit-backdrop-filter:blur(16px);',
+                'background-image:radial-gradient(circle at 50% 50%,transparent 0,transparent 2px,#0a0a0a 2px);',
+                'background-size:8px 8px;'
+            ].join('');
 
-            function measure() {
-                w = wrap.clientWidth;
-                h = wrap.clientHeight;
-                cx = Math.round(w / 2);
-                cy = Math.round(h / 2);
-                depth = (w + h) / 2;
-                colorRatio = 1 / depth;
-            }
+            wrap.appendChild(inner);
+            wrap.appendChild(overlay);
 
-            function setup() {
-                measure();
-                canvas.width  = w;
-                canvas.height = h;
-                ctx = canvas.getContext('2d');
-            }
+            // 36 gradients — 12 groups × 3 (left-beam, right-beam, centre-dot)
+            inner.style.backgroundImage = [
+                `radial-gradient(4px 100px at 0px 235px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 235px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 117.5px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 252px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 252px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 126px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 150px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 150px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 75px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 253px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 253px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 126.5px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 204px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 204px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 102px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 134px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 134px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 67px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 179px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 179px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 89.5px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 299px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 299px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 149.5px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 215px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 215px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 107.5px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 281px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 281px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 140.5px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 158px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 158px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 79px,${C} 100%,transparent 150%)`,
+                `radial-gradient(4px 100px at 0px 210px,${C},transparent)`,
+                `radial-gradient(4px 100px at 300px 210px,${C},transparent)`,
+                `radial-gradient(1.5px 1.5px at 150px 105px,${C} 100%,transparent 150%)`
+            ].join(',');
 
-            function bigBang() {
-                stars = Array.from({ length: QUANTITY }, () => [
-                    Math.random() * w * 2 - cx * 2,        // [0] x offset from center
-                    Math.random() * h * 2 - cy * 2,        // [1] y offset from center
-                    Math.round(Math.random() * depth),      // [2] z depth
-                    0, 0, 0, 0,                             // [3-6] px, py, ppx, ppy
-                    true                                    // [7] visible
-                ]);
-            }
+            inner.style.backgroundSize = [
+                '300px 235px','300px 235px','300px 235px',
+                '300px 252px','300px 252px','300px 252px',
+                '300px 150px','300px 150px','300px 150px',
+                '300px 253px','300px 253px','300px 253px',
+                '300px 204px','300px 204px','300px 204px',
+                '300px 134px','300px 134px','300px 134px',
+                '300px 179px','300px 179px','300px 179px',
+                '300px 299px','300px 299px','300px 299px',
+                '300px 215px','300px 215px','300px 215px',
+                '300px 281px','300px 281px','300px 281px',
+                '300px 158px','300px 158px','300px 158px',
+                '300px 210px','300px 210px','300px 210px'
+            ].join(',');
 
-            function resize() {
-                const ow = canvas.width, oh = canvas.height;
-                measure();
-                if (ow !== w || oh !== h) {
-                    const rw = w / ow, rh = h / oh;
-                    canvas.width  = w;
-                    canvas.height = h;
-                    stars = stars.map(s => {
-                        const n = [...s];
-                        n[0] = s[0] * rw;
-                        n[1] = s[1] * rh;
-                        n[3] = cx + (n[0] / n[2]) * ratio;
-                        n[4] = cy + (n[1] / n[2]) * ratio;
-                        return n;
-                    });
-                }
-            }
+            // Inject @keyframes — CSS animation is compositor-friendly
+            const FROM = '0px 220px,3px 220px,151.5px 337.5px,25px 24px,28px 24px,176.5px 150px,50px 16px,53px 16px,201.5px 91px,75px 224px,78px 224px,226.5px 230.5px,100px 19px,103px 19px,251.5px 121px,125px 120px,128px 120px,276.5px 187px,150px 31px,153px 31px,301.5px 120.5px,175px 235px,178px 235px,326.5px 384.5px,200px 121px,203px 121px,351.5px 228.5px,225px 224px,228px 224px,376.5px 364.5px,250px 26px,253px 26px,401.5px 105px,275px 75px,278px 75px,426.5px 180px';
+            const TO   = '0px 6800px,3px 6800px,151.5px 6917.5px,25px 13632px,28px 13632px,176.5px 13758px,50px 5416px,53px 5416px,201.5px 5491px,75px 17175px,78px 17175px,226.5px 17301.5px,100px 5119px,103px 5119px,251.5px 5221px,125px 8428px,128px 8428px,276.5px 8495px,150px 9876px,153px 9876px,301.5px 9965.5px,175px 13391px,178px 13391px,326.5px 13540.5px,200px 14741px,203px 14741px,351.5px 14848.5px,225px 18770px,228px 18770px,376.5px 18910.5px,250px 5082px,253px 5082px,401.5px 5161px,275px 6375px,278px 6375px,426.5px 6480px';
 
-            function update() {
-                stars = stars.map(s => {
-                    const n = [...s];
-                    n[7] = true;
-                    n[5] = n[3]; n[6] = n[4];   // save prev screen pos
-                    n[2] -= SPEED;
-                    if (n[2] > depth) { n[2] -= depth; n[7] = false; }
-                    if (n[2] < 0)     { n[2] += depth; n[7] = false; }
-                    n[3] = cx + (n[0] / n[2]) * ratio;
-                    n[4] = cy + (n[1] / n[2]) * ratio;
-                    return n;
-                });
-            }
-
-            function draw() {
-                ctx.fillStyle = BG_FILL;
-                ctx.fillRect(0, 0, w, h);
-                ctx.strokeStyle = STAR_COLOR;
-                stars.forEach(s => {
-                    if (s[5] > 0 && s[5] < w && s[6] > 0 && s[6] < h && s[7]) {
-                        ctx.lineWidth = (1 - colorRatio * s[2]) * 2;
-                        ctx.beginPath();
-                        ctx.moveTo(s[5], s[6]);
-                        ctx.lineTo(s[3], s[4]);
-                        ctx.stroke();
-                        ctx.closePath();
-                    }
-                });
-            }
-
-            function animate() {
-                resize();
-                update();
-                draw();
-                requestAnimationFrame(animate);
-            }
-
-            setup();
-            bigBang();
-            animate();
+            const sty = document.createElement('style');
+            sty.textContent = `@keyframes fpFall{from{background-position:${FROM}}to{background-position:${TO}}}#fp-inner{animation:fpFall 150s linear infinite;}`;
+            document.head.appendChild(sty);
         })();
     </script>
+
 </body>
 </html>
