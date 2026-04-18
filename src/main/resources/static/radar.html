@@ -130,6 +130,91 @@
             opacity: 0.55;
         }
 
+        /* ── Gap Analysis footer ────────────────────────────────── */
+        .gap-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            margin-top: 20px;
+        }
+        .gap-score-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            opacity: 0.8;
+        }
+        .gap-score-label strong {
+            font-weight: 700;
+            opacity: 1;
+        }
+        .gap-score-label.level-critical strong { color: var(--accent); }
+        .gap-score-label.level-developing strong { color: hsl(35,85%,55%); }
+        .gap-score-label.level-competitive strong { color: hsl(160,60%,45%); }
+        .gap-score-label.level-strong strong { color: var(--success); }
+
+        /* ── Market Demand footer ───────────────────────────────── */
+        .top-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            margin-top: 4px;
+        }
+        .top-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .top-cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px 4px 9px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .top-cat-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .top-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .top-skill-callout {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            opacity: 0.8;
+        }
+        .top-skill-callout strong {
+            color: var(--text);
+            opacity: 1;
+            font-weight: 700;
+        }
+        .top-query-meta {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.11em;
+            color: var(--text-muted);
+            opacity: 0.38;
+            text-align: right;
+            white-space: nowrap;
+        }
+
         /* ── Falling Pattern ─────────────────────────────────── */
         :root  { --fp-color: rgba(0, 0, 0, 0.10); }
         html.dark { --fp-color: rgba(255, 255, 255, 0.07); }
@@ -431,6 +516,13 @@
                     <ul id="res-rec" class="rec-list"></ul>
                 </div>
             </div>
+            <div class="gap-footer">
+                <div id="gap-categories" class="top-categories"></div>
+                <div class="top-meta-row">
+                    <span id="gap-score-label" class="gap-score-label"></span>
+                    <span id="gap-query-meta" class="top-query-meta"></span>
+                </div>
+            </div>
         </div>
     </template>
 
@@ -442,6 +534,13 @@
             </div>
             <div class="chart-wrapper">
                 <canvas id="topChart"></canvas>
+            </div>
+            <div class="top-footer">
+                <div id="top-categories" class="top-categories"></div>
+                <div class="top-meta-row">
+                    <span id="top-skill-callout" class="top-skill-callout"></span>
+                    <span id="top-query-meta" class="top-query-meta"></span>
+                </div>
             </div>
         </div>
     </template>
@@ -547,6 +646,28 @@
                 sel.appendChild(og);
             });
         })();
+
+        // ── Shared skill metadata ────────────────────────────────
+        const SKILL_CATEGORIES = {
+            'java':'Backend','python':'Backend','node.js':'Backend','spring boot':'Backend',
+            'django':'Backend','rest api':'Backend','microservices':'Backend',
+            'react':'Frontend','angular':'Frontend','vue':'Frontend','javascript':'Frontend',
+            'html':'Frontend','css':'Frontend','typescript':'Frontend',
+            'sql':'Database','mysql':'Database','postgresql':'Database','mongodb':'Database',
+            'redis':'Database','hibernate':'Database',
+            'docker':'DevOps','kubernetes':'DevOps','aws':'DevOps','azure':'DevOps',
+            'git':'DevOps','jenkins':'DevOps','linux':'DevOps',
+            'machine learning':'Data','deep learning':'Data','tensorflow':'Data',
+            'pandas':'Data','numpy':'Data','data analysis':'Data','tableau':'Data',
+            'data structures':'Fundamentals','algorithms':'Fundamentals',
+            'object oriented':'Fundamentals','system design':'Fundamentals',
+            'agile':'Fundamentals','communication':'Fundamentals',
+        };
+        const CAT_COLORS = {
+            'Backend':'hsl(220,70%,55%)','Frontend':'hsl(280,60%,60%)',
+            'Database':'hsl(160,60%,45%)','DevOps':'hsl(35,85%,55%)',
+            'Data':'hsl(340,70%,55%)','Fundamentals':'hsl(190,55%,50%)',
+        };
 
         // ── API ──────────────────────────────────────────────────
         let myChart = null;
@@ -678,6 +799,45 @@
             }
 
             gsap.to('.skill-tag', { opacity: 1, duration: 0.3, stagger: 0.04, ease: 'power2.out', delay: 0.3 });
+
+            // ── Footer: category coverage chips ──────────────────
+            const catCoverage = {};
+            const allSkills = [...data.matchedSkills, ...data.missingSkills];
+            allSkills.forEach(s => {
+                const cat = SKILL_CATEGORIES[s.toLowerCase()] || 'Other';
+                if (!catCoverage[cat]) catCoverage[cat] = { matched: 0, total: 0 };
+                catCoverage[cat].total++;
+            });
+            data.matchedSkills.forEach(s => {
+                const cat = SKILL_CATEGORIES[s.toLowerCase()] || 'Other';
+                if (catCoverage[cat]) catCoverage[cat].matched++;
+            });
+            const gapCatEl = document.getElementById('gap-categories');
+            Object.entries(catCoverage)
+                .sort((a, b) => b[1].total - a[1].total)
+                .forEach(([cat, stats]) => {
+                    const color = CAT_COLORS[cat] || 'var(--text-muted)';
+                    const chip  = document.createElement('span');
+                    chip.className = 'top-cat-chip';
+                    chip.innerHTML = `<span class="top-cat-dot" style="background:${color}"></span>${cat} · ${stats.matched}/${stats.total}`;
+                    gapCatEl.appendChild(chip);
+                });
+
+            // ── Footer: score label ───────────────────────────────
+            const score = Math.round(data.matchScore);
+            let level, levelClass, levelText;
+            if (score < 26)      { level = 'Critical gaps to fill';  levelClass = 'level-critical'; }
+            else if (score < 51) { level = 'Developing match';       levelClass = 'level-developing'; }
+            else if (score < 76) { level = 'Competitive candidate';  levelClass = 'level-competitive'; }
+            else                 { level = 'Strong candidate';       levelClass = 'level-strong'; }
+            const scoreLabelEl = document.getElementById('gap-score-label');
+            scoreLabelEl.className = `gap-score-label ${levelClass}`;
+            scoreLabelEl.innerHTML = `<strong>${level}</strong> · ${allSkills.length} skills in demand`;
+
+            // ── Footer: query meta ────────────────────────────────
+            const roleVal = document.getElementById('role').value;
+            const cityVal = document.getElementById('city').value || 'India';
+            document.getElementById('gap-query-meta').textContent = `${roleVal} · ${cityVal}`;
         }
 
         // ── Render: Top Demand ───────────────────────────────────
@@ -748,7 +908,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: { duration: 550, easing: 'easeOutQuart' },
-                    layout: { padding: { top: 4, right: 48, bottom: 4, left: 0 } },
+                    layout: { padding: { top: 4, right: 48, bottom: 4, left: 8 } },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -780,14 +940,48 @@
                             grid:   { display: false },
                             border: { display: false },
                             ticks: {
-                                font:  { family: "'Geist Mono', monospace", size: 11, weight: '600' },
-                                color: textColor,
+                                font:      { family: "'Geist Mono', monospace", size: 11, weight: '600' },
+                                color:     () => getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#f0f0f0',
+                                autoSkip:  false,
                             }
                         }
                     }
                 },
                 plugins: [valueLabels]
             });
+
+            // ── Footer: category chips ───────────────────────────
+            const catMap = {};
+            data.forEach(d => {
+                const cat = d.category || 'Other';
+                if (!catMap[cat]) catMap[cat] = { count: 0, demand: 0 };
+                catMap[cat].count++;
+                catMap[cat].demand += d.demandCount;
+            });
+            const catColors = { ...CAT_COLORS, 'Other': mutedColor };
+            const catEl = document.getElementById('top-categories');
+            Object.entries(catMap)
+                .sort((a, b) => b[1].demand - a[1].demand)
+                .forEach(([cat, stats]) => {
+                    const pct   = Math.round(stats.demand / totalDemand * 100);
+                    const color = catColors[cat] || mutedColor;
+                    const chip  = document.createElement('span');
+                    chip.className = 'top-cat-chip';
+                    chip.innerHTML = `<span class="top-cat-dot" style="background:${color}"></span>${cat} · ${stats.count} skill${stats.count > 1 ? 's' : ''} · ${pct}%`;
+                    catEl.appendChild(chip);
+                });
+
+            // ── Footer: top skill callout ────────────────────────
+            const top    = data[0];
+            const topPct = Math.round(top.demandCount / totalDemand * 100);
+            document.getElementById('top-skill-callout').innerHTML =
+                `<strong>#1</strong> ${top.name} — ${top.demandCount} postings · ${topPct}% of total`;
+
+            // ── Footer: query meta ───────────────────────────────
+            const roleVal = document.getElementById('role').value;
+            const cityVal = document.getElementById('city').value || 'India';
+            document.getElementById('top-query-meta').textContent =
+                `${roleVal} · ${cityVal} · ${data.length} skills`;
         }
 
         // ── Render: Curriculum ───────────────────────────────────
