@@ -106,47 +106,28 @@
         }
 
         /* ── Market Demand chart layout ──────────────────────── */
-        .top-chart-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 56px;
-            margin-top: 8px;
-        }
         .chart-wrapper {
             border: none !important;
             background: transparent !important;
             padding: 0 !important;
             box-shadow: none !important;
-            flex-shrink: 0;
-            width: 400px;
-            height: 400px;
-            max-height: 400px;
+            width: 100%;
+            height: 480px;
+            max-height: 480px;
         }
-        #top-legend {
-            flex: 0 0 auto;
+        .top-result-header {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-self: center;
-            min-width: 180px;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 8px;
         }
-        .top-legend-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-family: var(--font);
-            font-size: 0.77rem;
-            font-weight: 600;
+        .top-total-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
             color: var(--text-muted);
-            opacity: 0;
-            cursor: default;
-        }
-        .top-legend-swatch {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            flex-shrink: 0;
+            opacity: 0.55;
         }
 
         /* ── Falling Pattern ─────────────────────────────────── */
@@ -455,12 +436,12 @@
 
     <template id="tpl-top">
         <div class="top-result">
-            <h3>Market Demand</h3>
-            <div class="top-chart-row">
-                <div class="chart-wrapper">
-                    <canvas id="topChart"></canvas>
-                </div>
-                <div id="top-legend"></div>
+            <div class="top-result-header">
+                <h3>Market Demand</h3>
+                <span id="top-total" class="top-total-label"></span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="topChart"></canvas>
             </div>
         </div>
     </template>
@@ -704,35 +685,18 @@
             const tpl = document.getElementById('tpl-top').content.cloneNode(true);
             document.getElementById('result-inner').appendChild(tpl);
 
-            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111111';
+            const cs = getComputedStyle(document.documentElement);
+            const textColor   = cs.getPropertyValue('--text').trim()       || '#f0f0f0';
+            const mutedColor  = cs.getPropertyValue('--text-muted').trim() || '#888888';
+            const borderColor = cs.getPropertyValue('--border').trim()     || '#2a2a2a';
+            const cardColor   = cs.getPropertyValue('--card').trim()       || '#161616';
+
+            const totalDemand = data.reduce((a, d) => a + d.demandCount, 0);
+            document.getElementById('top-total').textContent = totalDemand.toLocaleString() + ' total postings';
 
             if (myChart) myChart.destroy();
 
             const ctx = document.getElementById('topChart').getContext('2d');
-            const totalDemand = data.reduce((a, d) => a + d.demandCount, 0);
-
-            const centerTextPlugin = {
-                id: 'centerText',
-                beforeDraw(chart) {
-                    const meta = chart.getDatasetMeta(0);
-                    if (!meta.data.length) return;
-                    const { x: cx, y: cy } = meta.data[0];
-                    const c = chart.ctx;
-                    const liveText = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111111';
-                    const liveMuted = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#666';
-                    c.restore();
-                    c.font = `bold 2rem 'Geist Mono', monospace`;
-                    c.textBaseline = 'middle';
-                    c.fillStyle = liveText;
-                    const text = totalDemand.toLocaleString();
-                    c.fillText(text, Math.round(cx - c.measureText(text).width / 2), cy - 8);
-                    c.font = `0.7rem 'Geist Mono', monospace`;
-                    c.fillStyle = liveMuted;
-                    const sub = 'Total Postings';
-                    c.fillText(sub, Math.round(cx - c.measureText(sub).width / 2), cy + 16);
-                    c.save();
-                }
-            };
 
             const palette = [
               '#c41111', '#d42222', '#e44433', '#f05544', '#f56633',
@@ -741,40 +705,58 @@
             ];
 
             myChart = new Chart(ctx, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
                     labels: data.map(d => d.name),
                     datasets: [{
                         data: data.map(d => d.demandCount),
                         backgroundColor: palette.slice(0, data.length),
-                        borderWidth: 1,
-                        borderColor: '#f5f5f5',
-                        hoverOffset: 6
+                        borderWidth: 0,
+                        borderRadius: 3,
+                        borderSkipped: false,
                     }]
                 },
                 options: {
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '72%',
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${ctx.parsed.x} postings`
+                            },
+                            backgroundColor: cardColor,
+                            titleColor: textColor,
+                            bodyColor: mutedColor,
+                            borderColor: borderColor,
+                            borderWidth: 1,
+                            padding: 10,
+                            titleFont: { family: "'Geist Mono', monospace", size: 11, weight: '700' },
+                            bodyFont:  { family: "'Geist Mono', monospace", size: 11 },
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid:   { color: borderColor },
+                            border: { color: borderColor },
+                            ticks: {
+                                font:      { family: "'Geist Mono', monospace", size: 11 },
+                                color:     mutedColor,
+                                precision: 0,
+                            }
+                        },
+                        y: {
+                            grid:   { display: false },
+                            border: { color: borderColor },
+                            ticks: {
+                                font:  { family: "'Geist Mono', monospace", size: 11, weight: '600' },
+                                color: textColor,
+                            }
+                        }
                     }
-                },
-                plugins: [centerTextPlugin]
+                }
             });
-
-            // Custom HTML legend with stagger animation
-            const legendEl = document.getElementById('top-legend');
-            data.forEach((d, i) => {
-                const item = document.createElement('div');
-                item.className = 'top-legend-item';
-                item.innerHTML = `<span class="top-legend-swatch" style="background:${palette[i % palette.length]}"></span><span>${d.name}</span>`;
-                legendEl.appendChild(item);
-            });
-            gsap.fromTo('.top-legend-item',
-                { opacity: 0, x: 14 },
-                { opacity: 1, x: 0, duration: 0.3, stagger: 0.05, ease: 'power2.out', delay: 0.2 }
-            );
         }
 
         // ── Render: Curriculum ───────────────────────────────────
