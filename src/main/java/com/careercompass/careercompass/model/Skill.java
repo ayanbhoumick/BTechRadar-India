@@ -22,5 +22,5 @@ public class Skill implements Comparable <Skill> {
     public String getName(){return name; }
     public int getDemandCount(){return demandCount; }
     public String getCategory(){return category; }
-    public void setDemanCount(int demandCount){this.demandCount = demandCount; }
+    public void setDemandCount(int demandCount){this.demandCount = demandCount; }
 }

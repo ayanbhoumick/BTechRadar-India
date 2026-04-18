@@ -55,9 +55,10 @@ public class SkillGapService {
         double matchScore = demandedSkills.isEmpty() ? 0 :
                 ((double) matchedSkills.size() / demandedSkills.size()) * 100;
 
-        // 7 — Recommendations (top 5 missing)
+        // 7 — Recommendations: top 5 missing skills sorted by market demand
+        missingSkills.sort((a, b) -> skillMap.getOrDefault(b, 0) - skillMap.getOrDefault(a, 0));
         List<String> recommendations = missingSkills.size() > 5 ?
-                missingSkills.subList(0, 5) : missingSkills;
+                new ArrayList<>(missingSkills.subList(0, 5)) : new ArrayList<>(missingSkills);
 
         return new SkillGapReport(matchScore, matchedSkills, missingSkills, recommendations);
     }
