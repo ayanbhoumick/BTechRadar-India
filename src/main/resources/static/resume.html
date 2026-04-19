@@ -786,6 +786,7 @@
             loaderEl.classList.add('hidden');
             resultsEl.classList.remove('hidden');
             resultsEl.innerHTML = `<div class="result-pad"><p style="color:var(--accent);font-size:0.75rem;font-weight:700;padding:40px 0;text-align:center">${msg}</p></div>`;
+            document.getElementById('btn-analyse').classList.remove('active');
         }
 
         async function handleAnalyse() {
