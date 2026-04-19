@@ -5,6 +5,426 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTech Radar | Resume Analyser</title>
     <link rel="stylesheet" href="/shared/layout.css">
+    <style>
+        /* ── Fluid Dropdown ──────────────────────────────────── */
+        .fd-wrap { position: relative; width: 100%; }
+        .fd-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            background: none;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            outline: none;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            color: var(--text);
+            padding: 4px 0 8px;
+            cursor: pointer;
+            transition: border-bottom-color 0.15s;
+            text-align: left;
+        }
+        .fd-trigger:focus,
+        .fd-trigger[aria-expanded="true"] { border-bottom-color: var(--text); }
+        .fd-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text-muted);
+            opacity: 0.4;
+        }
+        .fd-label.has-value { color: var(--text); opacity: 1; }
+        .fd-chevron {
+            flex-shrink: 0;
+            opacity: 0.45;
+            display: flex;
+            align-items: center;
+            margin-left: 8px;
+        }
+        .fd-panel {
+            position: absolute;
+            left: 0; right: 0;
+            top: calc(100% + 8px);
+            z-index: 200;
+            overflow: hidden;
+            height: 0;
+        }
+        .fd-inner {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+        .fd-scroll {
+            max-height: 252px;
+            overflow-y: auto;
+            position: relative;
+            padding: 2px 0;
+        }
+        .fd-highlight {
+            position: absolute;
+            left: 0; right: 0;
+            height: 36px;
+            background: var(--bg-subtle);
+            border-radius: 6px;
+            pointer-events: none;
+            opacity: 0;
+            top: 0;
+        }
+        .fd-item {
+            position: relative;
+            padding: 0 12px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            height: 36px;
+            display: flex;
+            align-items: center;
+            transition: color 0.12s;
+            user-select: none;
+        }
+        .fd-item:hover,
+        .fd-item.fd-selected { color: var(--text); }
+        .fd-item.fd-selected { font-weight: 600; }
+        .fd-group-label {
+            padding: 10px 12px 4px;
+            font-size: 0.58rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+            opacity: 0.45;
+            pointer-events: none;
+        }
+        .fd-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 8px;
+        }
+
+        /* ── File Upload ──────────────────────────────────────── */
+        .file-upload-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            padding: 24px 16px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            text-align: center;
+            background: transparent;
+            width: 100%;
+        }
+        .file-upload-box:hover {
+            border-color: var(--text-muted);
+            background: var(--bg-subtle);
+        }
+        .file-upload-box.has-file {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.04);
+        }
+        .file-upload-box.error-file {
+            border-color: var(--accent);
+        }
+        .file-upload-icon {
+            opacity: 0.4;
+        }
+        .file-upload-label-text {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+        .file-upload-hint {
+            font-size: 0.62rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            opacity: 0.45;
+        }
+        .file-upload-filename {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--success);
+            word-break: break-all;
+            max-width: 100%;
+        }
+
+        /* ── JD Textarea ─────────────────────────────────────── */
+        .jd-textarea {
+            width: 100%;
+            background: none;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            outline: none;
+            font-family: var(--font);
+            font-size: 0.875rem;
+            color: var(--text);
+            padding: 4px 0 8px;
+            resize: none;
+            min-height: 72px;
+            transition: border-color 0.15s;
+            line-height: 1.5;
+        }
+        .jd-textarea:focus { border-bottom-color: var(--text); }
+        .jd-textarea::placeholder { color: var(--text-muted); opacity: 0.4; }
+
+        /* ── Resume Result ────────────────────────────────────── */
+        .resume-result {
+            display: flex;
+            flex-direction: column;
+            gap: 36px;
+        }
+
+        /* ── Score Pair ──────────────────────────────────────── */
+        /* DESIGN-01: Two score boxes are the primary payload — largest visual weight */
+        /* DESIGN-04: ATS = --accent (red/urgency), Quality = --success (green/quality) */
+        .scores-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) { .scores-row { grid-template-columns: 1fr; } }
+        .score-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px 28px;
+            background: var(--card);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        /* DESIGN-02: Score number at 3rem, 700 weight — matches .score-value from layout.css */
+        .score-card-number {
+            display: block;
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .score-card-number.ats-color  { color: var(--accent); }
+        .score-card-number.qual-color { color: var(--success); }
+        /* DESIGN-02: Grade label at 0.68rem uppercase — matches .score-label from layout.css */
+        .score-card-grade {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .score-card-title {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+            opacity: 0.55;
+            margin-bottom: 4px;
+        }
+
+        /* ── Keyword Sections ─────────────────────────────────── */
+        /* DESIGN-03: gap: 36px between scores and keywords — mirrors .gap-result rhythm */
+        .keywords-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ── Issues & Suggestions ────────────────────────────── */
+        /* DESIGN-03: rec-panel style for lists — same padding/spacing as radar.html */
+        .issue-list,
+        .suggestion-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 0;
+        }
+        .issue-list li,
+        .suggestion-list li {
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.6;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .issue-list li::before {
+            content: '!';
+            color: var(--accent);
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+        .suggestion-list li::before {
+            content: '→';
+            color: var(--success);
+            flex-shrink: 0;
+        }
+
+        /* ── Lists Grid ──────────────────────────────────────── */
+        /* DESIGN-03: two-column layout for issues/suggestions — breathing room */
+        .lists-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 600px) { .lists-grid { grid-template-columns: 1fr; } }
+        .list-panel {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 22px;
+            background: var(--bg);
+        }
+
+        /* ── Meta Footer ─────────────────────────────────────── */
+        /* DESIGN-05: meta footer at bottom — muted, unobtrusive */
+        .resume-meta-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        .resume-meta-stats {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+        .resume-meta-query {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.11em;
+            color: var(--text-muted);
+            opacity: 0.38;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* ── Falling Pattern (placeholder) ──────────────────── */
+        :root  { --fp-color: rgba(0, 0, 0, 0.10); }
+        html.dark { --fp-color: rgba(255, 255, 255, 0.07); }
+
+        #results-content { display: flex; flex-direction: column; }
+        .radar-placeholder { flex: 1; position: relative; min-height: 400px; }
+        .bracket-frame { position: relative; z-index: 1; }
+
+        .fp-wrap {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 72%);
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 72%);
+        }
+        .fp-bg {
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(4px 100px at 0px 235px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 235px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 117.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 252px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 252px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 126px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 150px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 150px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 75px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 253px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 253px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 126.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 204px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 204px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 102px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 134px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 134px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 67px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 179px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 179px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 89.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 299px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 299px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 149.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 215px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 215px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 107.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 281px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 281px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 140.5px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 158px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 158px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 79px, var(--fp-color) 100%, transparent 150%),
+                radial-gradient(4px 100px at 0px 210px, var(--fp-color), transparent),
+                radial-gradient(4px 100px at 300px 210px, var(--fp-color), transparent),
+                radial-gradient(1.5px 1.5px at 150px 105px, var(--fp-color) 100%, transparent 150%);
+            background-size:
+                300px 235px, 300px 235px, 300px 235px,
+                300px 252px, 300px 252px, 300px 252px,
+                300px 150px, 300px 150px, 300px 150px,
+                300px 253px, 300px 253px, 300px 253px,
+                300px 204px, 300px 204px, 300px 204px,
+                300px 134px, 300px 134px, 300px 134px,
+                300px 179px, 300px 179px, 300px 179px,
+                300px 299px, 300px 299px, 300px 299px,
+                300px 215px, 300px 215px, 300px 215px,
+                300px 281px, 300px 281px, 300px 281px,
+                300px 158px, 300px 158px, 300px 158px,
+                300px 210px, 300px 210px, 300px 210px;
+            animation: fpFall 150s linear infinite;
+        }
+        @keyframes fpFall {
+            from {
+                background-position:
+                    0px 220px, 3px 220px, 151.5px 337.5px,
+                    25px 24px, 28px 24px, 176.5px 150px,
+                    50px 16px, 53px 16px, 201.5px 91px,
+                    75px 224px, 78px 224px, 226.5px 230.5px,
+                    100px 19px, 103px 19px, 251.5px 121px,
+                    125px 120px, 128px 120px, 276.5px 187px,
+                    150px 31px, 153px 31px, 301.5px 120.5px,
+                    175px 235px, 178px 235px, 326.5px 384.5px,
+                    200px 121px, 203px 121px, 351.5px 228.5px,
+                    225px 224px, 228px 224px, 376.5px 364.5px,
+                    250px 26px, 253px 26px, 401.5px 105px,
+                    275px 75px, 278px 75px, 426.5px 180px;
+            }
+            to {
+                background-position:
+                    0px 6800px, 3px 6800px, 151.5px 6917.5px,
+                    25px 13632px, 28px 13632px, 176.5px 13758px,
+                    50px 5416px, 53px 5416px, 201.5px 5491px,
+                    75px 17175px, 78px 17175px, 226.5px 17301.5px,
+                    100px 5119px, 103px 5119px, 251.5px 5221px,
+                    125px 8428px, 128px 8428px, 276.5px 8495px,
+                    150px 9876px, 153px 9876px, 301.5px 9965.5px,
+                    175px 13391px, 178px 13391px, 326.5px 13540.5px,
+                    200px 14741px, 203px 14741px, 351.5px 14848.5px,
+                    225px 18770px, 228px 18770px, 376.5px 18910.5px,
+                    250px 5082px, 253px 5082px, 401.5px 5161px,
+                    275px 6375px, 278px 6375px, 426.5px 6480px;
+            }
+        }
+        .fp-overlay {
+            position: absolute;
+            inset: 0;
+            backdrop-filter: blur(1em);
+            -webkit-backdrop-filter: blur(1em);
+            background-image: radial-gradient(circle at 50% 50%, transparent 0, transparent 2px, var(--bg) 2px);
+            background-size: 8px 8px;
+        }
+    </style>
     <script>
         (function(){
             var t = localStorage.getItem('theme') ||
@@ -13,9 +433,9 @@
         })();
     </script>
 </head>
-<body>
+<body class="radar-page">
+
     <nav class="nav">
-        <a href="/" class="nav-wordmark">BTech Radar</a>
         <div class="nav-actions">
             <a href="/" class="nav-back">← Home</a>
             <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
@@ -25,17 +445,674 @@
         </div>
     </nav>
 
-    <main class="coming-soon-main">
-        <p class="coming-soon-label">02 / Analyse my Resume</p>
-        <h1 class="coming-soon-title">Coming Soon</h1>
-        <p class="coming-soon-desc">Upload your resume and get a personalised skill report.<br>This feature is under construction.</p>
-        <a href="/" class="back-link">← Back to Home</a>
-    </main>
+    <div class="radar-layout">
 
-    <footer class="footer">
-        <span>© 2026 BTech Radar India</span>
-        <span>v2.0</span>
-    </footer>
+        <!-- ── Sidebar ─────────────────────────────────────────── -->
+        <aside class="radar-sidebar">
+
+            <div class="sidebar-group">
+                <div class="sidebar-section">
+                    <span class="sidebar-section-label">Resume</span>
+                </div>
+                <div class="sidebar-fields">
+
+                    <!-- Role select -->
+                    <div class="sidebar-field">
+                        <label class="sidebar-field-label" for="role">Role</label>
+                        <select id="role" class="sidebar-input">
+                            <option value="">— pick a role —</option>
+                        </select>
+                    </div>
+
+                    <!-- City select (optional) -->
+                    <div class="sidebar-field">
+                        <label class="sidebar-field-label" for="city">City <span style="opacity:0.45;font-weight:400">(optional)</span></label>
+                        <select id="city" class="sidebar-input">
+                            <option value="">— pick a city —</option>
+                            <option value="Bengaluru">Bengaluru</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                            <option value="Gurgaon">Gurgaon</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Noida">Noida</option>
+                            <option value="Pune">Pune</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Kolkata">Kolkata</option>
+                            <option value="Ahmedabad">Ahmedabad</option>
+                            <option value="Agartala">Agartala</option>
+                            <option value="Aizawl">Aizawl</option>
+                            <option value="Amritsar">Amritsar</option>
+                            <option value="Bhopal">Bhopal</option>
+                            <option value="Bhubaneswar">Bhubaneswar</option>
+                            <option value="Chandigarh">Chandigarh</option>
+                            <option value="Coimbatore">Coimbatore</option>
+                            <option value="Dehradun">Dehradun</option>
+                            <option value="Dispur">Dispur</option>
+                            <option value="Gangtok">Gangtok</option>
+                            <option value="Goa">Goa</option>
+                            <option value="Guwahati">Guwahati</option>
+                            <option value="Imphal">Imphal</option>
+                            <option value="Indore">Indore</option>
+                            <option value="Itanagar">Itanagar</option>
+                            <option value="Jaipur">Jaipur</option>
+                            <option value="Jammu">Jammu</option>
+                            <option value="Kochi">Kochi</option>
+                            <option value="Kohima">Kohima</option>
+                            <option value="Leh">Leh</option>
+                            <option value="Lucknow">Lucknow</option>
+                            <option value="Ludhiana">Ludhiana</option>
+                            <option value="Madurai">Madurai</option>
+                            <option value="Mangaluru">Mangaluru</option>
+                            <option value="Nagpur">Nagpur</option>
+                            <option value="Patna">Patna</option>
+                            <option value="Port Blair">Port Blair</option>
+                            <option value="Puducherry">Puducherry</option>
+                            <option value="Raipur">Raipur</option>
+                            <option value="Ranchi">Ranchi</option>
+                            <option value="Shillong">Shillong</option>
+                            <option value="Shimla">Shimla</option>
+                            <option value="Srinagar">Srinagar</option>
+                            <option value="Surat">Surat</option>
+                            <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+                            <option value="Tiruchirappalli">Tiruchirappalli</option>
+                            <option value="Vadodara">Vadodara</option>
+                            <option value="Vijayawada">Vijayawada</option>
+                            <option value="Visakhapatnam">Visakhapatnam</option>
+                        </select>
+                    </div>
+
+                    <!-- PDF Upload — DESIGN-05 fix: styled box, not raw file input -->
+                    <div class="sidebar-field">
+                        <label class="sidebar-field-label">Resume PDF</label>
+                        <input type="file" id="resumeFile" accept=".pdf" style="display:none" aria-label="Upload PDF resume">
+                        <label for="resumeFile" class="file-upload-box" id="fileUploadBox">
+                            <span class="file-upload-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            </span>
+                            <span class="file-upload-label-text" id="fileUploadText">Click to upload PDF</span>
+                            <span class="file-upload-hint" id="fileUploadHint">PDF files only · max 10MB</span>
+                        </label>
+                    </div>
+
+                    <!-- JD textarea (optional) -->
+                    <div class="sidebar-field">
+                        <label class="sidebar-field-label" for="jdText">Paste JD <span style="opacity:0.45;font-weight:400">(optional)</span></label>
+                        <textarea
+                            id="jdText"
+                            class="jd-textarea"
+                            placeholder="Paste the job description here to improve keyword matching..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="sidebar-section">
+                    <span class="sidebar-section-label">Analysis</span>
+                </div>
+                <div class="sidebar-actions">
+                    <button class="sidebar-btn" id="btn-analyse" onclick="handleAnalyse()">
+                        Analyse Resume <span>↑</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="sidebar-meta">
+                    <div class="meta-row">
+                        <span class="meta-key">SYS</span>
+                        <span class="meta-val online">Online</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-key">FILE</span>
+                        <span class="meta-val" id="meta-file">—</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-key">LOC</span>
+                        <span class="meta-val" id="meta-loc">—</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- ── Output ───────────────────────────────────────────── -->
+        <main class="radar-output" id="radar-output">
+
+            <div id="loading-state" class="loading-state hidden">
+                <div class="sq-loader-sm">
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                    <div class="sq-sm"></div>
+                </div>
+                <p>Analysing Resume...</p>
+            </div>
+
+            <div id="results-content">
+                <div class="radar-placeholder">
+                    <div class="fp-wrap">
+                        <div class="fp-bg"></div>
+                        <div class="fp-overlay"></div>
+                    </div>
+                    <div class="bracket-frame">
+                        <p class="bracket-text">Upload a resume and run analysis</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- ── Template ──────────────────────────────────────────── -->
+    <template id="tpl-resume">
+        <div class="resume-result">
+
+            <!-- DESIGN-01: Scores are primary — largest visual weight, top of result -->
+            <div class="scores-row">
+                <div class="score-card">
+                    <p class="score-card-title">ATS Score</p>
+                    <span id="res-ats-number" class="score-card-number ats-color">0</span>
+                    <span id="res-ats-grade" class="score-card-grade">—</span>
+                </div>
+                <div class="score-card">
+                    <p class="score-card-title">Quality Score</p>
+                    <span id="res-qual-number" class="score-card-number qual-color">0</span>
+                    <span id="res-qual-grade" class="score-card-grade">—</span>
+                </div>
+            </div>
+
+            <!-- Keyword sections -->
+            <div class="keywords-section">
+                <div>
+                    <p class="result-section-label">Matched Keywords</p>
+                    <div id="res-matched" class="tags-container"></div>
+                </div>
+                <div>
+                    <p class="result-section-label">Missing Keywords</p>
+                    <div id="res-missing" class="tags-container"></div>
+                </div>
+            </div>
+
+            <!-- Issues & Suggestions — DESIGN-03: two-column panel layout for breathing room -->
+            <div class="lists-grid">
+                <div class="list-panel">
+                    <p class="result-section-label" style="margin-top:0">Quality Issues</p>
+                    <ul id="res-issues" class="issue-list"></ul>
+                </div>
+                <div class="list-panel">
+                    <p class="result-section-label" style="margin-top:0">Suggestions</p>
+                    <ul id="res-suggestions" class="suggestion-list"></ul>
+                </div>
+            </div>
+
+            <!-- Meta footer — DESIGN-05: muted, small, anchored bottom -->
+            <div class="resume-meta-footer">
+                <span id="res-meta-stats" class="resume-meta-stats">—</span>
+                <span id="res-meta-query" class="resume-meta-query">—</span>
+            </div>
+
+        </div>
+    </template>
+
+    <!-- ── Scripts ────────────────────────────────────────────── -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+        const ROLE_GROUPS = [
+            {
+                id: 'web',
+                label: 'Web & Full Stack',
+                roles: [
+                    { label: 'Frontend',   value: 'Frontend Engineer' },
+                    { label: 'Backend',    value: 'Backend Engineer' },
+                    { label: 'Full Stack', value: 'Full Stack Engineer' },
+                ]
+            },
+            {
+                id: 'data',
+                label: 'Data & AI',
+                roles: [
+                    { label: 'AI Engineer',      value: 'AI Engineer' },
+                    { label: 'AI & Data Sci',    value: 'AI and Data Scientist' },
+                    { label: 'Data Engineer',    value: 'Data Engineer' },
+                    { label: 'Data Analyst',     value: 'Data Analyst' },
+                    { label: 'Machine Learning', value: 'Machine Learning Engineer' },
+                    { label: 'MLOps',            value: 'MLOps Engineer' },
+                    { label: 'BI Analyst',       value: 'BI Analyst' },
+                ]
+            },
+            {
+                id: 'infra',
+                label: 'Infra & Security',
+                roles: [
+                    { label: 'DevOps',         value: 'DevOps Engineer' },
+                    { label: 'DevSecOps',      value: 'DevSecOps Engineer' },
+                    { label: 'Cyber Security', value: 'Cyber Security Engineer' },
+                    { label: 'DB Engineer',    value: 'Database Engineer' },
+                ]
+            },
+            {
+                id: 'mobile',
+                label: 'Mobile & Gaming',
+                roles: [
+                    { label: 'Android',          value: 'Android Developer' },
+                    { label: 'iOS',              value: 'iOS Developer' },
+                    { label: 'Game Dev',         value: 'Game Developer' },
+                    { label: 'Server-Side Game', value: 'Server Side Game Developer' },
+                    { label: 'Blockchain',       value: 'Blockchain Developer' },
+                ]
+            },
+            {
+                id: 'quality',
+                label: 'Eng & Quality',
+                roles: [
+                    { label: 'Software Architect', value: 'Software Architect' },
+                    { label: 'QA',                 value: 'QA Engineer' },
+                    { label: 'Technical Writer',   value: 'Technical Writer' },
+                    { label: 'UX Design',          value: 'UX Designer' },
+                ]
+            },
+            {
+                id: 'product',
+                label: 'Product & Leadership',
+                roles: [
+                    { label: 'Product Manager', value: 'Product Manager' },
+                    { label: 'Eng Manager',     value: 'Engineering Manager' },
+                    { label: 'Dev Relations',   value: 'Developer Relations' },
+                ]
+            },
+        ];
+
+        // Populate role select from ROLE_GROUPS
+        (function () {
+            const sel = document.getElementById('role');
+            ROLE_GROUPS.forEach(g => {
+                const og = document.createElement('optgroup');
+                og.label = g.label;
+                g.roles.forEach(r => {
+                    const o = document.createElement('option');
+                    o.value = r.value;
+                    o.textContent = r.label;
+                    og.appendChild(o);
+                });
+                sel.appendChild(og);
+            });
+        })();
+
+        // ── File Upload UI ───────────────────────────────────────
+        const fileInput   = document.getElementById('resumeFile');
+        const uploadBox   = document.getElementById('fileUploadBox');
+        const uploadText  = document.getElementById('fileUploadText');
+        const uploadHint  = document.getElementById('fileUploadHint');
+        const metaFileEl  = document.getElementById('meta-file');
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+            if (!isPdf) {
+                uploadBox.classList.add('error-file');
+                uploadBox.classList.remove('has-file');
+                uploadText.textContent = 'Invalid file type';
+                uploadHint.textContent = 'Only PDF files are accepted';
+                metaFileEl.textContent = '—';
+                fileInput.value = '';
+                return;
+            }
+
+            uploadBox.classList.remove('error-file');
+            uploadBox.classList.add('has-file');
+            uploadText.textContent = file.name;
+            uploadHint.textContent = (file.size / 1024).toFixed(0) + ' KB';
+            metaFileEl.textContent = file.name.length > 14
+                ? file.name.substring(0, 12) + '…'
+                : file.name;
+        });
+
+        // ── API state ────────────────────────────────────────────
+        let loadingTimer = null;
+        const resultsEl  = document.getElementById('results-content');
+        const loaderEl   = document.getElementById('loading-state');
+
+        function showError(msg) {
+            clearTimeout(loadingTimer);
+            loaderEl.classList.add('hidden');
+            resultsEl.classList.remove('hidden');
+            resultsEl.innerHTML = `<div class="result-pad"><p style="color:var(--accent);font-size:0.75rem;font-weight:700;padding:40px 0;text-align:center">${msg}</p></div>`;
+        }
+
+        async function handleAnalyse() {
+            const role = document.getElementById('role').value.trim();
+            const city = document.getElementById('city').value;
+            const jd   = document.getElementById('jdText').value.trim();
+            const file = fileInput.files[0];
+
+            if (!role) { alert('Please select a role'); return; }
+            if (!file) { alert('Please upload a PDF resume'); return; }
+
+            // Validate file type once more
+            const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+            if (!isPdf) {
+                showError('Invalid file type — only PDF resumes are accepted.');
+                return;
+            }
+
+            document.getElementById('btn-analyse').classList.add('active');
+            document.getElementById('meta-loc').textContent = city || 'India';
+
+            resultsEl.classList.add('hidden');
+            loaderEl.classList.remove('hidden');
+
+            clearTimeout(loadingTimer);
+            loadingTimer = setTimeout(() => {
+                showError('Request timed out (30s). Check your connection or try again.');
+            }, 30000);
+
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('role', role);
+                if (city) fd.append('city', city);
+                if (jd)   fd.append('jd', jd);
+
+                // Let browser set Content-Type (multipart/form-data with boundary)
+                const res = await fetch('/api/resume/analyze', {
+                    method: 'POST',
+                    body: fd,
+                });
+
+                if (!res.ok) {
+                    let errMsg = `Server error ${res.status}`;
+                    try {
+                        const errBody = await res.text();
+                        if (errBody) errMsg += ` — ${errBody.substring(0, 120)}`;
+                    } catch (_) { /* ignore */ }
+                    throw new Error(errMsg);
+                }
+
+                const data = await res.json();
+                clearTimeout(loadingTimer);
+                showResults(() => renderResume(data));
+
+            } catch (err) {
+                const msg = (err.message || '').toLowerCase().includes('fetch')
+                    ? 'Network error — check your connection.'
+                    : `${err.message || 'Unknown error'} — make sure the server is running.`;
+                showError(msg);
+                console.error(err);
+            }
+        }
+
+        function showResults(renderFn) {
+            loaderEl.classList.add('hidden');
+            resultsEl.innerHTML = '<div class="result-pad" id="result-inner"></div>';
+            resultsEl.classList.remove('hidden');
+            renderFn();
+            gsap.fromTo(resultsEl, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+        }
+
+        // ── Render: Resume ───────────────────────────────────────
+        function renderResume(data) {
+            const tpl = document.getElementById('tpl-resume').content.cloneNode(true);
+            document.getElementById('result-inner').appendChild(tpl);
+
+            // ── ATS score count-up (DESIGN-01: primary attention target)
+            const atsNumEl  = document.getElementById('res-ats-number');
+            const qualNumEl = document.getElementById('res-qual-number');
+
+            gsap.to({ val: 0 }, {
+                val: Math.round(data.atsScore || 0),
+                duration: 1.2,
+                ease: 'power2.out',
+                onUpdate() { atsNumEl.textContent = Math.round(this.targets()[0].val); }
+            });
+
+            // ── Quality score count-up (offset by 0.15s for stagger feel)
+            gsap.to({ val: 0 }, {
+                val: Math.round(data.qualityScore || 0),
+                duration: 1.2,
+                ease: 'power2.out',
+                delay: 0.15,
+                onUpdate() { qualNumEl.textContent = Math.round(this.targets()[0].val); }
+            });
+
+            // ── Grade labels
+            document.getElementById('res-ats-grade').textContent  = data.atsGrade     || '—';
+            document.getElementById('res-qual-grade').textContent = data.qualityGrade  || '—';
+
+            // ── Matched keywords — green tags (layout.css .skill-tag.matched)
+            const matchedEl = document.getElementById('res-matched');
+            (data.matchedKeywords || []).forEach(kw => {
+                const tag = document.createElement('span');
+                tag.className = 'skill-tag matched';
+                tag.textContent = kw;
+                matchedEl.appendChild(tag);
+            });
+
+            // ── Missing keywords — red tags (layout.css .skill-tag.missing)
+            const missingEl = document.getElementById('res-missing');
+            (data.missingKeywords || []).forEach(kw => {
+                const tag = document.createElement('span');
+                tag.className = 'skill-tag missing';
+                tag.textContent = kw;
+                missingEl.appendChild(tag);
+            });
+
+            // DESIGN-02: skill-tag starts at opacity:0 in layout.css — animate in
+            gsap.to('.skill-tag', { opacity: 1, duration: 0.3, stagger: 0.04, ease: 'power2.out', delay: 0.35 });
+
+            // ── Quality issues list
+            const issuesEl = document.getElementById('res-issues');
+            const issues   = data.qualityIssues || [];
+            if (issues.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'No quality issues found.';
+                issuesEl.appendChild(li);
+            } else {
+                issues.forEach(issue => {
+                    const li = document.createElement('li');
+                    li.textContent = issue;
+                    issuesEl.appendChild(li);
+                });
+            }
+
+            // ── Suggestions list
+            const suggEl = document.getElementById('res-suggestions');
+            const suggs  = data.suggestions || [];
+            if (suggs.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'No additional suggestions.';
+                suggEl.appendChild(li);
+            } else {
+                suggs.forEach(s => {
+                    const li = document.createElement('li');
+                    li.textContent = s;
+                    suggEl.appendChild(li);
+                });
+            }
+
+            // ── Meta footer
+            const words = data.wordCount  || 0;
+            const pages = data.pageCount  || 0;
+            document.getElementById('res-meta-stats').textContent =
+                `${words.toLocaleString()} words · ${pages} page${pages !== 1 ? 's' : ''}`;
+
+            const roleVal = document.getElementById('role').value;
+            const cityVal = document.getElementById('city').value || 'India';
+            document.getElementById('res-meta-query').textContent = `${roleVal} · ${cityVal}`;
+        }
+    </script>
+
+    <script>
+        // ── Fluid Dropdown ────────────────────────────────────────
+        (function () {
+            function buildFluidDropdown(selectEl) {
+                const wrap = document.createElement('div');
+                wrap.className = 'fd-wrap';
+                selectEl.parentNode.insertBefore(wrap, selectEl);
+                selectEl.style.display = 'none';
+                wrap.appendChild(selectEl);
+
+                // Trigger
+                const trigger = document.createElement('button');
+                trigger.type = 'button';
+                trigger.className = 'fd-trigger';
+                trigger.setAttribute('aria-expanded', 'false');
+                trigger.setAttribute('aria-haspopup', 'listbox');
+
+                const label = document.createElement('span');
+                label.className = 'fd-label';
+                const initOpt = selectEl.options[selectEl.selectedIndex];
+                label.textContent = initOpt ? initOpt.text : '—';
+                if (initOpt && initOpt.value) label.classList.add('has-value');
+
+                const chevron = document.createElement('span');
+                chevron.className = 'fd-chevron';
+                chevron.innerHTML = '<svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1L5.5 6L10 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+                trigger.appendChild(label);
+                trigger.appendChild(chevron);
+                wrap.appendChild(trigger);
+
+                // Panel
+                const panel = document.createElement('div');
+                panel.className = 'fd-panel';
+                const inner = document.createElement('div');
+                inner.className = 'fd-inner';
+                const scroll = document.createElement('div');
+                scroll.className = 'fd-scroll';
+                scroll.setAttribute('role', 'listbox');
+
+                const highlight = document.createElement('div');
+                highlight.className = 'fd-highlight';
+                scroll.appendChild(highlight);
+                inner.appendChild(scroll);
+                panel.appendChild(inner);
+                wrap.appendChild(panel);
+
+                const items = [];
+                let isOpen = false;
+
+                function createItem(value, text) {
+                    const item = document.createElement('div');
+                    item.className = 'fd-item';
+                    item.dataset.value = value;
+                    item.textContent = text;
+                    item.setAttribute('role', 'option');
+
+                    item.addEventListener('mouseenter', () => {
+                        gsap.to(highlight, {
+                            y: item.offsetTop,
+                            height: item.offsetHeight || 36,
+                            opacity: 1,
+                            duration: 0.22,
+                            ease: 'power2.out'
+                        });
+                    });
+
+                    item.addEventListener('click', () => {
+                        selectEl.value = value;
+                        label.textContent = text;
+                        label.classList.add('has-value');
+                        items.forEach(i => i.classList.remove('fd-selected'));
+                        item.classList.add('fd-selected');
+                        closeDropdown();
+                    });
+
+                    return item;
+                }
+
+                // Populate items from select
+                const optgroups = selectEl.querySelectorAll('optgroup');
+                if (optgroups.length > 0) {
+                    optgroups.forEach((og, gi) => {
+                        if (gi > 0) {
+                            const div = document.createElement('div');
+                            div.className = 'fd-divider';
+                            scroll.appendChild(div);
+                        }
+                        const grpLbl = document.createElement('div');
+                        grpLbl.className = 'fd-group-label';
+                        grpLbl.textContent = og.label;
+                        scroll.appendChild(grpLbl);
+
+                        og.querySelectorAll('option').forEach(opt => {
+                            const item = createItem(opt.value, opt.text);
+                            if (opt.value === selectEl.value) item.classList.add('fd-selected');
+                            items.push(item);
+                            scroll.appendChild(item);
+                        });
+                    });
+                } else {
+                    Array.from(selectEl.options).forEach(opt => {
+                        if (!opt.value) return;
+                        const item = createItem(opt.value, opt.text);
+                        if (opt.value === selectEl.value) item.classList.add('fd-selected');
+                        items.push(item);
+                        scroll.appendChild(item);
+                    });
+                }
+
+                function openDropdown() {
+                    isOpen = true;
+                    trigger.setAttribute('aria-expanded', 'true');
+
+                    // Measure height, animate from 0
+                    panel.style.height = 'auto';
+                    const fullH = panel.offsetHeight;
+                    panel.style.height = '0px';
+                    gsap.to(panel, { height: fullH, duration: 0.35, ease: 'power3.out', overwrite: true });
+
+                    // Chevron spin
+                    gsap.to(chevron, { rotate: 180, duration: 0.22, ease: 'power2.out' });
+
+                    // Stagger items + group labels in DOM order
+                    const animEls = scroll.querySelectorAll('.fd-item, .fd-group-label, .fd-divider');
+                    gsap.fromTo(animEls,
+                        { opacity: 0, y: -7 },
+                        { opacity: function(i, el) {
+                            return el.classList.contains('fd-group-label') ? 0.45 : 1;
+                          },
+                          y: 0, duration: 0.2, stagger: 0.016, ease: 'power2.out', delay: 0.07 }
+                    );
+
+                    // Position highlight on current selection
+                    const selItem = items.find(i => i.dataset.value === selectEl.value);
+                    if (selItem) {
+                        gsap.set(highlight, { y: selItem.offsetTop, height: selItem.offsetHeight || 36, opacity: 1 });
+                    }
+                }
+
+                function closeDropdown() {
+                    isOpen = false;
+                    trigger.setAttribute('aria-expanded', 'false');
+                    gsap.to(panel, { height: 0, duration: 0.22, ease: 'power2.in', overwrite: true });
+                    gsap.to(chevron, { rotate: 0, duration: 0.2, ease: 'power2.out' });
+                    gsap.to(highlight, { opacity: 0, duration: 0.1 });
+                }
+
+                trigger.addEventListener('click', () => isOpen ? closeDropdown() : openDropdown());
+
+                document.addEventListener('click', e => {
+                    if (isOpen && !wrap.contains(e.target)) closeDropdown();
+                });
+
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape' && isOpen) closeDropdown();
+                });
+            }
+
+            buildFluidDropdown(document.getElementById('role'));
+            buildFluidDropdown(document.getElementById('city'));
+        })();
+    </script>
 
     <script>
         document.getElementById('themeToggle').addEventListener('click', () => {
